@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use ruint::aliases::{U256, U512};
-
+//@>i the main program for bonding curve
 use crate::{
     safe_math::SafeMath,
     u128x128_math::{mul_div_u256, Rounding},
@@ -218,11 +218,17 @@ pub fn get_next_sqrt_price_from_base_amount_out_rounding_up(
     if amount == 0 {
         return Ok(sqrt_price);
     }
+    //@>i convert to bigger number type to prevent overflow
     let sqrt_price = U256::from(sqrt_price);
     let liquidity = U256::from(liquidity);
-
+ 
     let product = U256::from(amount).safe_mul(sqrt_price)?;
     let denominator = liquidity.safe_sub(U256::from(product))?;
+
+
+    if denominator.is_zero() {
+        return Err(PoolError::MathOverflow);
+    }
 
     let result = mul_div_u256(liquidity, sqrt_price, denominator, Rounding::Up)
         .ok_or_else(|| PoolError::TypeCastFailed)?

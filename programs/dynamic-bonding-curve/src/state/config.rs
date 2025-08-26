@@ -3,6 +3,7 @@ use num_enum::{IntoPrimitive, TryFromPrimitive};
 use ruint::aliases::U256;
 use static_assertions::const_assert_eq;
 
+//@>i fee calculation logic and pool configuration
 use crate::{
     base_fee::{get_base_fee_handler, BaseFeeHandler, FeeRateLimiter},
     constants::{
@@ -63,6 +64,7 @@ impl PoolFeesConfig {
     /// The dynamic fee is based on price volatility and is only applied if dynamic fees are enabled.
     /// The total fee is capped at MAX_FEE_NUMERATOR (99%) to ensure reasonable trading costs.
     ///
+    //@>i main function for fee calculation
     /// Returns the total fee numerator that will be used to calculate actual trading fees.
     pub fn get_total_fee_numerator_from_included_fee_amount(
         &self,
