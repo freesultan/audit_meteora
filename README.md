@@ -1,166 +1,124 @@
-# Meteora - Dynamic Bonding Curve audit details
+# Dynamic Bonding Curve
 
-**Award pool details**
-- Total Prize Pool: $104,500 in USDC
-  - HM awards: up to $96,000 in USDC
-    - If no valid Highs are found, the HM pool is $19,200 in USDC
-    - If no valid Highs or Mediums are found, the HM pool is $0
-  - QA awards: $4,000 in USDC
-  - Judge awards: $4,000 in USDC
-  - Scout awards: $500 in USDC
-- [Read our guidelines for more details](https://docs.code4rena.com/competitions)
-- Starts August 22, 2025 20:00 UTC
-- Ends September 12, 2025 20:00 UTC 
+The Dynamic Bonding Curve program is a launch pool protocol that allows any launch partners to enable their users to launch tokens with customizable virtual curves directly on their platforms. With direct integration into Jupiter and other trading platforms, traders can trade these launch tokens immediately across all these integrations. The Virtual Cuvre program provides a few benefits:
 
-**❗ Important notes for wardens** 
-1. A coded, runnable PoC is required for all High/Medium submissions to this audit. 
-    - This repo includes a basic template to run the test suite.
-    - PoCs must use the test suite provided in this repo.
-    - Your submission will be marked as Insufficient if the POC is not runnable and working with the provided test suite.
-    - Exception: PoC is optional (though recommended) for wardens with signal ≥ 0.68.
-1. This audit includes **deployed code,** and [the "live criticals" exception](https://docs.code4rena.com/awarding/incentive-model-and-awards#the-live-criticals-exception) therefore applies. 
-1. Judging phase risk adjustments (upgrades/downgrades):
-    - High- or Medium-risk submissions downgraded by the judge to Low-risk (QA) will be ineligible for awards.
-    - Upgrading a Low-risk finding from a QA report to a Medium- or High-risk finding is not supported.
-    - As such, wardens are encouraged to select the appropriate risk level carefully during the submission phase.
+- Launch partners can have different configurations for their launch pools, for example, customizable quote token (SOL/USDC/etc), customizable curve for token graduation, customizable fees, etc.
+- Users on these launch platforms can easily create tokens and launch pools directly with the partners' configurations directly on their partners' UI.
+- Trading platforms/bots can immediately trade on these tokens with our direct integrations.
+- Tokens will graduate to various AMM (rightnow we only support Meteora DAMM v1 and Meteora DAMM v2), based on partner configuration. With locked LP tokens, launchers can claim fees on the locked LPs.
+- Full API supports for easy integration for launch partners and trading platforms/bots.
 
-## Publicly Known Issues
+## Notable Features
 
-_Note for C4 wardens: Anything included in this `Automated Findings / Publicly Known Issues` section is considered a publicly known issue and is ineligible for awards._
+- multiple quote tokens support: SOL, USDC, etc
+- SPL Token and Token2022 support
+- fee scheduler/rate limiter + dynamic-fee
+- flexible fee collect mode (ex: collect fee only in quote token)
+- customizable liquidity distribution (up to 20 price ranges with different liquidity curve)
 
-## Links
+## Customizable Fees
 
-- **Previous audits:** : https://docs.meteora.ag/resources/audits/dbc
-- **Documentation:** 
-  - [Overview of Meteora's Tech Stack](https://docs.meteora.ag/overview/home)
-  - [Developer Documentation](https://docs.meteora.ag/developer-guide/home)
-- **Website:** [meteora.ag](https://app.meteora.ag/)
-- **X/Twitter:** [@MeteoraAG](https://x.com/MeteoraAG)
+- Virtual pool will collect trading fee evey time user trade with that pool (buy or sell).
+- A percentage of trading fee will be paid to the Dynamic Bonding Curve protocol. A swap host (Jupiter/Photon/Trading bots) can submit the swap transaction with a referal account to get some referal fee as part of protocol fee. The rest of trading fee belongs to partner.
+- After token has graduated and is migrated, LP is locked for partner and token creator. The ratio of the locked LP is based on what partner has configured in the configuration. With this, partner and token creator can claim fees based on the locked LP on Meteora DAMM.
+- The last swap will create a surplus on quote token, that will be shared between the partner and the protocol.
 
----
+## Customizable Pool Configuration
 
-# Scope
+Partner can specify these parameters when they create a configuration on all their pools:
 
-## Files in Scope: (81 files)
+- `pool_fees`: include `base_fee` and `dynamic_fee` (optional). Partner can add fee scheduler or rate limiter in `base_fee` or just a fixed fee. `pool_fees` defines the trading fee for any pool that is created from this configuration.
+- `collect_fee_mode` (`0 | 1`): `0` means the virtual pool will only collect fee in quote token, `1` means virtual pool will collect fee in both tokens.
+- `migration_option` (`0 | 1`):  `0` means DammV1 and `1` means DammV2
+- `activation_type` (`0 | 1`): `0` means slot, `1` means timestamp, this field indicates the time unit that pool will work with, mostly in calculating fee scheduler/ rate limiter and dynamic fee.
+- `token_type` (`0 | 1`): `0` means SPL Token, `1` means Token2022.
+- `token_decimal`: the token decimals that the token will use when user creates the virtual pool with this configuration, we only support token decimals from 6 to 9.
+- `partner_lp_percentage`: the percentage of LP that partner can claim after token is migrated.
+- `partner_locked_lp_percentage`: the percentage of LP that partner will locked after token is migrated.
+- `creator_lp_percentage`: the percentage of LP that creator can claim after token is migrated.
+- `creator_locked_lp_percentage`: the percentage of LP that creator will be locked after token is migrated.
+- `migration_quote_threshold`: the threhold for quote token, that after virtual pool reserve get such quote token amount, the token will graduate from the launch pool and will be migrated.
+- `fee_claimer`: the address of partner that can claim trading fees from the virtual pools as well as fees from the locked LPs.
+- `owner`: owner of the configuration.
+- `quote_mint`: the quote mint address that virtual pool will support.
+- `locked_vesting`: locked vesting for creator after token is migrated (token will be migrated to [Jup lock](https://lock.jup.ag/))
+- `migration_fee_option`: allow partner to choose a fee option on graduated pool (currently support 0.25% | 0.3% | 1% | 2% | 4% | 6% | Customizable (only for DammV2 migration))
+- `migrated_pool_fee`: allow partner to choose fees on migration pool, that param is only valid if `migration_fee_option == Customizable` and `migration_option == 1` (DammV2 migration)
+- `token_supply`: when the fields are specified, token will have fixed supply in pre and post migration, leftover will be returned to leftover_receiver (configured in config key)
+- `creator_trading_fee_percentage`: the percentage of trading fee and surplus pool creator can get for a pool
+- `token_update_authority`: the option to allow creator/partner to config token authority, 0: creator can update token metadata, 1: immutable, 2: partner can update token metadata, 3: creator can update token metadata and mint token, 4: partner can update token metadata and mint token.
+- `migration_fee`: the option to allow partner can config migration fee from migration quote threshold. Migration fee can be shared between partner and creator
+- `sqrt_start_price`: square root of min price in the bonding curve for the virtual pools.
+- `curve`: an array of square price and liquidity, that defines the liquidity distribution for the virtual pools.
 
-- [`base_fee/fee_rate_limiter.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/base_fee/fee_rate_limiter.rs)
-- [`base_fee/fee_scheduler.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/base_fee/fee_scheduler.rs)
-- [`base_fee/mod.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/base_fee/mod.rs)
-- [`const_pda.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/const_pda.rs)
-- [`constants.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/constants.rs)
-- [`curve.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/curve.rs)
-- [`error.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/error.rs)
-- [`event.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/event.rs)
-- [`admin/auth.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/admin/auth.rs)
-- [`admin/ix_claim_protocol_fee.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/admin/ix_claim_protocol_fee.rs)
-- [`admin/ix_close_claim_protocol_fee_operator.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/admin/ix_close_claim_protocol_fee_operator.rs)
-- [`admin/ix_create_claim_protocol_fee_operator.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/admin/ix_create_claim_protocol_fee_operator.rs)
-- [`admin/ix_withdraw_protocol_surplus.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/admin/ix_withdraw_protocol_surplus.rs)
-- [`admin/mod.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/admin/mod.rs)
-- [`creator/ix_claim_creator_trading_fee.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/creator/ix_claim_creator_trading_fee.rs)
-- [`creator/ix_create_virtual_pool_metadata.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/creator/ix_create_virtual_pool_metadata.rs)
-- [`creator/ix_transfer_pool_creator.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/creator/ix_transfer_pool_creator.rs)
-- [`creator/ix_withdraw_creator_surplus.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/creator/ix_withdraw_creator_surplus.rs)
-- [`creator/mod.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/creator/mod.rs)
-- [`initialize_pool/ix_initialize_virtual_pool_with_spl_token.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/initialize_pool/ix_initialize_virtual_pool_with_spl_token.rs)
-- [`initialize_pool/ix_initialize_virtual_pool_with_token2022.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/initialize_pool/ix_initialize_virtual_pool_with_token2022.rs)
-- [`initialize_pool/mod.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/initialize_pool/mod.rs)
-- [`initialize_pool/process_create_token_metadata.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/initialize_pool/process_create_token_metadata.rs)
-- [`migration/create_locker.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/migration/create_locker.rs)
-- [`migration/dynamic_amm_v2/damm_v2_metadata_state.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/migration/dynamic_amm_v2/damm_v2_metadata_state.rs)
-- [`migration/dynamic_amm_v2/damm_v2_utils.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/migration/dynamic_amm_v2/damm_v2_utils.rs)
-- [`migration/dynamic_amm_v2/migrate_damm_v2_initialize_pool.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/migration/dynamic_amm_v2/migrate_damm_v2_initialize_pool.rs)
-- [`migration/dynamic_amm_v2/migration_damm_v2_create_metadata.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/migration/dynamic_amm_v2/migration_damm_v2_create_metadata.rs)
-- [`migration/dynamic_amm_v2/mod.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/migration/dynamic_amm_v2/mod.rs)
-- [`migration/ix_withdraw_migration_fee.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/migration/ix_withdraw_migration_fee.rs)
-- [`migration/meteora_damm/meteora_damm_claim_lp_token.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/migration/meteora_damm/meteora_damm_claim_lp_token.rs)
-- [`migration/meteora_damm/meteora_damm_lock_lp_token.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/migration/meteora_damm/meteora_damm_lock_lp_token.rs)
-- [`migration/meteora_damm/meteora_damm_metadata_state.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/migration/meteora_damm/meteora_damm_metadata_state.rs)
-- [`migration/meteora_damm/migrate_meteora_damm_initialize_pool.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/migration/meteora_damm/migrate_meteora_damm_initialize_pool.rs)
-- [`migration/meteora_damm/migration_meteora_damm_create_metadata.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/migration/meteora_damm/migration_meteora_damm_create_metadata.rs)
-- [`migration/meteora_damm/mod.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/migration/meteora_damm/mod.rs)
-- [`migration/mod.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/migration/mod.rs)
-- [`migration/withdraw_leftover.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/migration/withdraw_leftover.rs)
-- [`instructions/mod.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/mod.rs)
-- [`partner/ix_claim_partner_trading_fee.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/partner/ix_claim_partner_trading_fee.rs)
-- [`partner/ix_create_config.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/partner/ix_create_config.rs)
-- [`partner/ix_create_partner_metadata.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/partner/ix_create_partner_metadata.rs)
-- [`partner/ix_withdraw_partner_surplus.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/partner/ix_withdraw_partner_surplus.rs)
-- [`partner/mod.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/partner/mod.rs)
-- [`swap/ix_swap.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/swap/ix_swap.rs)
-- [`swap/mod.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/swap/mod.rs)
-- [`swap/swap_exact_in.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/swap/swap_exact_in.rs)
-- [`swap/swap_exact_out.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/swap/swap_exact_out.rs)
-- [`swap/swap_partial_fill.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/instructions/swap/swap_partial_fill.rs)
-- [`lib.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/lib.rs)
-- [`macros.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/macros.rs)
-- [`math/fee_math.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/math/fee_math.rs)
-- [`math/mod.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/math/mod.rs)
-- [`math/safe_math.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/math/safe_math.rs)
-- [`math/u128x128_math.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/math/u128x128_math.rs)
-- [`math/utils_math.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/math/utils_math.rs)
-- [`params/fee_parameters.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/params/fee_parameters.rs)
-- [`params/liquidity_distribution.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/params/liquidity_distribution.rs)
-- [`params/mod.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/params/mod.rs)
-- [`params/swap.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/params/swap.rs)
-- [`state/claim_fee_operator.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/state/claim_fee_operator.rs)
-- [`state/config.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/state/config.rs)
-- [`state/fee.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/state/fee.rs)
-- [`state/mod.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/state/mod.rs)
-- [`state/partner_metadata.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/state/partner_metadata.rs)
-- [`state/virtual_pool.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/state/virtual_pool.rs)
-- [`state/virtual_pool_metadata.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/state/virtual_pool_metadata.rs)
-- [`utils/activation_handler.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/utils/activation_handler.rs)
-- [`utils/mod.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/utils/mod.rs)
-- [`utils/token.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/utils/token.rs)
+## Bonding Curve
 
-## Files out of Scope: (13 files)
+A simple constant product `x * y = virtual_base_reserve * virtual_curve_reserve` can be presented as `x * y = liquidity * liquidity`, while `liquidity = sqrt(virtual_base_reserve * virtual_curve_reserve)`. With a contraint on `migration_quote_threshold`, it can be presented as a function of `liquidity`, `min_price`, `max_price`. We denote `liquidity = l`, `min_price = pa`, `max_price = pb`. So we have:
 
-- [`dynamic-bonding-curve-sdk/src/lib.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/dynamic-bonding-curve-sdk/src/lib.rs)
-- [`dynamic-bonding-curve-sdk/src/quote_exact_in.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/dynamic-bonding-curve-sdk/src/quote_exact_in.rs)
-- [`dynamic-bonding-curve-sdk/src/quote_exact_out.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/dynamic-bonding-curve-sdk/src/quote_exact_out.rs)
-- [`dynamic-bonding-curve-sdk/src/quote_partial_fill.r`s](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/dynamic-bonding-curve-sdk/src/quote_partial_fill.rs)
-- [`tests/mod.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/tests/mod.rs)
-- [`tests/test_quote_exact_out.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/dynamic-bonding-curve-sdk/src/tests/test_quote_exact_out.rs)
-- [`tests/test_quote_partial_fill.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/dynamic-bonding-curve-sdk/src/tests/test_quote_partial_fill.rs)
-- [`dynamic-bonding-curve-sdk/src/tests/mod.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/dynamic-bonding-curve-sdk/src/tests/mod.rs)
-- [`dynamic-bonding-curve-sdk/src/tests/test_quote_exact_out.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/dynamic-bonding-curve-sdk/src/tests/test_quote_exact_out.rs)
-- [`dynamic-bonding-curve-sdk/src/tests/test_quote_partial_fill.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/dynamic-bonding-curve-sdk/src/tests/test_quote_partial_fill.rs)
-- [`libs/damm-v2/src/lib.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/libs/damm-v2/src/lib.rs)
-- [`libs/dynamic-amm/src/lib.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/libs/dynamic-amm/src/lib.rs)
-- [`libs/locker/src/lib.rs`](https://github.com/MeteoraAg/dynamic-bonding-curve/blob/30dd2a1fc5c90949e2038f61c19dc03fee513d98/libs/locker/src/lib.rs)
+`bonding_curve_constant_product = function(l, pa, pb)`
 
+On our dynamic bonding curve protocol:
 
-# Additional context
+`bonding_curve = function([l_i, pa_i, pb_i])`
 
-## Areas of concern (where to focus for bugs)
+That means partner can configure a bonding curve with any liquidity distribution up on their strategy.
 
-Main areas to focus on:
-- Funds are safe (reserve fund, fees of partner/creator/protocol, surplus amount, amount left)
-- Identify any blockers for the migration process (i.e. after the bonding curve reaches the migration quote threshold, it should be migrated)
+For example, if the pool has this configuration:
 
-## Main invariants
+- `sqrt_start_price = 1`
+- `curve = [sqrt_price = 2, liquidity = 100), (sqrt_price = 4, liquidity = 500)]`
 
-Main contract: 
-- https://github.com/MeteoraAg/dynamic-bonding-curve/tree/30dd2a1fc5c90949e2038f61c19dc03fee513d98
+Then the bonding curve will function of 2 price ranges: `(l = 100, pa = 1, pb = 2)` and `(l = 500, pa = 2, pb = 4)`.
 
-Third-party contracts:
-- Damm v2: https://github.com/MeteoraAg/damm-v2
-- Locker: https://github.com/jup-ag/jup-lock
-- Damm v1/Dynamic vault: Closed source (https://docs.meteora.ag/overview/products/damm-v1/what-is-damm-v1)
+## Development
 
-## Running tests
+### Dependencies
 
+- anchor 0.31.0
+- solana 2.1.0
+- rust 1.79.0
+
+### Build
+
+Program
+
+```
+anchor build -p dynamic_bonding_curve
+```
+
+### Test
+
+```
 pnpm install
 pnpm test
+```
 
-## Sample PoC
+### Program Address
 
-Utilize the existing test suite here as your base for POC's:
-- https://github.com/MeteoraAg/dynamic-bonding-curve/tree/30dd2a1fc5c90949e2038f61c19dc03fee513d98/tests
-- https://github.com/MeteoraAg/dynamic-bonding-curve/tree/30dd2a1fc5c90949e2038f61c19dc03fee513d98/programs/dynamic-bonding-curve/src/tests
+- Mainnet-beta: dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN
+- Devnet: dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN
 
-## Miscellaneous
-Employees of Meteora and employees' family members are ineligible to participate in this audit.
 
-Code4rena's rules cannot be overridden by the contents of this README. In case of doubt, please check with C4 staff.
+### Config key for migration 
+
+#### Meteora damm (v1):
+- migration_fee_option == 0: 8f848CEy8eY6PhJ3VcemtBDzPPSD4Vq7aJczLZ3o8MmX
+- migration_fee_option == 1: HBxB8Lf14Yj8pqeJ8C4qDb5ryHL7xwpuykz31BLNYr7S
+- migration_fee_option == 2: 7v5vBdUQHTNeqk1HnduiXcgbvCyVEZ612HLmYkQoAkik
+- migration_fee_option == 3: EkvP7d5yKxovj884d2DwmBQbrHUWRLGK6bympzrkXGja
+- migration_fee_option == 4: 9EZYAJrcqNWNQzP2trzZesP7XKMHA1jEomHzbRsdX8R2
+- migration_fee_option == 5: 8cdKo87jZU2R12KY1BUjjRPwyjgdNjLGqSGQyrDshhud
+
+#### Damm v2:
+- migration_fee_option == 0: 7F6dnUcRuyM2TwR8myT1dYypFXpPSxqwKNSFNkxyNESd
+- migration_fee_option == 1: 2nHK1kju6XjphBLbNxpM5XRGFj7p9U8vvNzyZiha1z6k
+- migration_fee_option == 2: Hv8Lmzmnju6m7kcokVKvwqz7QPmdX9XfKjJsXz8RXcjp
+- migration_fee_option == 3: 2c4cYd4reUYVRAB9kUUkrq55VPyy2FNQ3FDL4o12JXmq
+- migration_fee_option == 4: AkmQWebAwFvWk55wBoCr5D62C6VVDTzi84NJuD9H7cFD
+- migration_fee_option == 5: DbCRBj8McvPYHJG1ukj8RE15h2dCNUdTAESG49XpQ44u
+- migration_fee_option == 6: A8gMrEPJkacWkcb3DGwtJwTe16HktSEfvwtuDh2MCtck
+
+
+## Audits
+
+The program has been audited. You can find the audit report [here](https://docs.meteora.ag/resources/audits#id-4.-dbc-dynamic-bonding-curve).
