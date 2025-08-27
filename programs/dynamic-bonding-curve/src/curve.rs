@@ -227,7 +227,10 @@ pub fn get_next_sqrt_price_from_base_amount_out_rounding_up(
 
 
     if denominator.is_zero() {
-        return Err(PoolError::MathOverflow);
+        //@>q what is the problem with this error?
+        return Err(PoolError::MathOverflow.into());
+        //return Err(PoolError::MathOverflow);
+        
     }
 
     let result = mul_div_u256(liquidity, sqrt_price, denominator, Rounding::Up)
