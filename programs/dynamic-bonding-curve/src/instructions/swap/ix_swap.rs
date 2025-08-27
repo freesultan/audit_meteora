@@ -54,13 +54,13 @@ pub enum SwapMode {
     ExactOut,
 }
 
-#[event_cpi]
-#[derive(Accounts)]
+#[event_cpi] //@>i enable CPI for this event
+#[derive(Accounts)] //@>i context for swap instruction
 pub struct SwapCtx<'info> {
     /// CHECK: pool authority
     #[account(
         address = const_pda::pool_authority::ID,
-    )]
+    )]    
     pub pool_authority: AccountInfo<'info>,
 
     /// config key

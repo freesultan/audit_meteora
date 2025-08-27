@@ -20,7 +20,7 @@ pub enum FeeSchedulerMode {
     // fee = cliff_fee_numerator * (1-reduction_factor/10_000)^passed_period
     Exponential,
 }
-
+//@>i type
 #[derive(Debug, Default)]
 pub struct FeeScheduler {
     pub cliff_fee_numerator: u64,
@@ -29,8 +29,9 @@ pub struct FeeScheduler {
     pub reduction_factor: u64,
     pub fee_scheduler_mode: u8,
 }
-
+//@>i implementation for FeeScheduler type
 impl FeeScheduler {
+    //@>i self = instance of the struct this method belongs to
     pub fn get_max_base_fee_numerator(&self) -> u64 {
         self.cliff_fee_numerator
     }
@@ -38,15 +39,24 @@ impl FeeScheduler {
     pub fn get_min_base_fee_numerator(&self) -> Result<u64> {
         self.get_base_fee_numerator_by_period(self.number_of_period.into())
     }
-
+    
+    //@>i Result is a type that represents either success (Ok) or failure (Err)
+    //@>i u64 is an unsigned 64-bit integer type
     fn get_base_fee_numerator_by_period(&self, period: u64) -> Result<u64> {
+        //@>i convert u64 to u16 safely - we are sure that this conversion will not fail
+        //@>i because we are limiting period to number_of_period which is u16
         let period = period.min(self.number_of_period.into());
 
         let base_fee_mode = FeeSchedulerMode::try_from(self.fee_scheduler_mode)
             .map_err(|_| PoolError::TypeCastFailed)?;
 
+        //@>i match is similar to switch-case in other languages
         match base_fee_mode {
             FeeSchedulerMode::Linear => {
+                //@>i fee_numerator = cliff_fee_numerator - (reduction_factor * period)
+                //@>i fee = starting_fee - (reduction × time_passed)
+                //@>i first ? means if the mul operation fails, return the error
+                //@>i second ? means if the sub operation fails, return the error
                 let fee_numerator = self
                     .cliff_fee_numerator
                     .safe_sub(self.reduction_factor.safe_mul(period)?)?;
@@ -73,7 +83,7 @@ impl FeeScheduler {
         self.get_base_fee_numerator_by_period(period)
     }
 }
-
+//@>i trait implementation for FeeScheduler type
 impl BaseFeeHandler for FeeScheduler {
     fn validate(&self, _collect_fee_mode: u8, _activation_type: ActivationType) -> Result<()> {
         if self.period_frequency != 0 || self.number_of_period != 0 || self.reduction_factor != 0 {

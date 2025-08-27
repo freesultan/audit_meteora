@@ -335,7 +335,8 @@ pub struct CreateConfigCtx<'info> {
 
     pub system_program: Program<'info, System>,
 }
-
+//@>i This function handles the creation of a new configuration for a dynamic bonding curve pool.
+//@>i It validates the provided parameters, calculates necessary values, and initializes the pool configuration
 pub fn handle_create_config(
     ctx: Context<CreateConfigCtx>,
     config_parameters: ConfigParameters,
