@@ -136,7 +136,8 @@ describe("Fee Swap test", () => {
       });
     });
 
-    it("Swap Quote to Base", async () => {
+    it.only("Swap Quote to Base", async () => {
+      console.log("swap quote to Base started");
       virtualPoolState = await getVirtualPool(
         context.banksClient,
         program,
@@ -150,6 +151,7 @@ describe("Fee Swap test", () => {
       const preBaseTradingFee = virtualPoolState.partnerBaseFee;
       const preQuoteProtocolFee = virtualPoolState.protocolQuoteFee;
       const preBaseProtocolFee = virtualPoolState.protocolBaseFee;
+      console.log("preBaseReserve: ", preBaseReserve.toString());
 
       // use to validate actual balance in vault
       const preBaseVaultBalance =
