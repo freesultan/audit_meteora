@@ -34,7 +34,7 @@ import {
   unpackAccount,
 } from "@solana/spl-token";
 
-describe("Swap Over the Curve", () => {
+describe.only("Swap Over the Curve", () => {
   let context: ProgramTestContext;
   let admin: Keypair;
   let operator: Keypair;

@@ -117,6 +117,7 @@ impl<'info> SwapCtx<'info> {
 }
 
 pub fn handle_swap_wrapper(ctx: Context<SwapCtx>, params: SwapParameters2) -> Result<()> {
+    msg!("--handle_swap_wrapper started--");
     let SwapParameters2 {
         amount_0,
         amount_1,
@@ -156,8 +157,10 @@ pub fn handle_swap_wrapper(ctx: Context<SwapCtx>, params: SwapParameters2) -> Re
     require!(amount_0 > 0, PoolError::AmountIsZero);
 
     let has_referral = ctx.accounts.referral_token_account.is_some();
-
+    //@>i config and pool are both accountLoaders 
+    //@>i config is immutable (only read)
     let config = ctx.accounts.config.load()?;
+    //@>i pool is mutable (read/write)
     let mut pool = ctx.accounts.pool.load_mut()?;
 
     let current_point = get_current_point(config.activation_type)?;
