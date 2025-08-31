@@ -81,7 +81,7 @@ pub struct SwapCtx<'info> {
     /// The vault token account for base token
     #[account(mut, token::token_program = token_base_program, token::mint = base_mint)]
     pub base_vault: Box<InterfaceAccount<'info, TokenAccount>>,
-
+    //@>i InterfaceAccount is an Anchor wrapper to add attributes to this Solana TokenAccount
     /// The vault token account for quote token
     #[account(mut, token::token_program = token_quote_program, token::mint = quote_mint)]
     pub quote_vault: Box<InterfaceAccount<'info, TokenAccount>>,
@@ -117,8 +117,8 @@ impl<'info> SwapCtx<'info> {
 }
 
 pub fn handle_swap_wrapper(ctx: Context<SwapCtx>, params: SwapParameters2) -> Result<()> {
-    msg!("--handle_swap_wrapper started--");
-    let SwapParameters2 {
+
+     let SwapParameters2 {
         amount_0,
         amount_1,
         swap_mode,
@@ -128,6 +128,7 @@ pub fn handle_swap_wrapper(ctx: Context<SwapCtx>, params: SwapParameters2) -> Re
     let swap_mode = SwapMode::try_from(swap_mode).map_err(|_| PoolError::TypeCastFailed)?;
 
     let trade_direction = ctx.accounts.get_trade_direction();
+
     let (
         token_in_mint,
         token_out_mint,
@@ -162,12 +163,13 @@ pub fn handle_swap_wrapper(ctx: Context<SwapCtx>, params: SwapParameters2) -> Re
     let config = ctx.accounts.config.load()?;
     //@>i pool is mutable (read/write)
     let mut pool = ctx.accounts.pool.load_mut()?;
-
+    //@>i get current point in slot or timestamp
     let current_point = get_current_point(config.activation_type)?;
 
     // another validation to prevent snipers to craft multiple swap instructions in 1 tx
     // (if we dont do this, they are able to concat 16 swap instructions in 1 tx)
     let rate_limiter = config.pool_fees.base_fee.get_fee_rate_limiter();
+    
     if let Ok(rate_limiter) = &rate_limiter {
         if rate_limiter.is_rate_limiter_applied(
             current_point,
@@ -326,8 +328,7 @@ pub fn handle_swap_wrapper(ctx: Context<SwapCtx>, params: SwapParameters2) -> Re
     }
 
     Ok(())
-}
-
+//@>q how can attacker skip this validation?
 pub fn validate_single_swap_instruction<'c, 'info>(
     pool: &Pubkey,
     remaining_accounts: &'c [AccountInfo<'info>],

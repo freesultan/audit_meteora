@@ -1,0 +1,15 @@
+# solana/rust/anchor
+
+## get current timestamp and slot of Solana
+
+```
+curl --insecure https://api.mainnet-beta.solana.com   -X POST -H "Content-Type: application/json"   -d '{"jsonrpc":"2.0","id":1,"method":"getSlot"}'
+{"jsonrpc":"2.0","result":363659418,"id":1}
+
+```
+
+## what is a sniper attack?
+A bot/mallicious bundle more than one swap instructions into one transaction to extract more value out of their swap at the expense of regular users. 
+
+
+
