@@ -1,3 +1,6 @@
+## Excalidraw link
+[excalidraw](https://excalidraw.com/#json=IKq0bnBoGAZwlC17fU-X9,u5DHQ6AosXLgg9n9b2rN2Q)
+
 ## TEST
 
 Use `anchor test tests/yourtest.tests.ts` instead of 'pnpm test'
