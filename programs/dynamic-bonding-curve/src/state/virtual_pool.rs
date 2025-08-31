@@ -80,11 +80,12 @@ pub enum PoolType {
     AnchorDeserialize,
     AnchorSerialize,
 )]
+//@>i the core state of pool migrations
 pub enum MigrationProgress {
-    PreBondingCurve,
-    PostBondingCurve,
+    PreBondingCurve,//@>i pool is active on bondingCurve
+    PostBondingCurve, //@>i reached it's migration threshold, ready for vesting.the pool has collected enough quote tokens
     LockedVesting,
-    CreatedPool,
+    CreatedPool,//@>i migration completed
 }
 
 #[account(zero_copy)]
@@ -952,6 +953,7 @@ impl VirtualPool {
     }
 
     pub fn is_curve_complete(&self, migration_threshold: u64) -> bool {
+        //@>i return if the collected quote reserve amount is reached the threshold
         self.quote_reserve >= migration_threshold
     }
 

@@ -174,16 +174,20 @@ pub fn handle_swap_wrapper(ctx: Context<SwapCtx>, params: SwapParameters2) -> Re
 
     if let Ok(rate_limiter) = &rate_limiter {
         //@>i rate_limiter is a free_rate_limiter
+        //@>i Returns true if the limiter STILL applies (i.e., too soon for another swap). increasing fee and single swap check in quote token is still in effect
         if rate_limiter.is_rate_limiter_applied(
             current_point,
             pool.activation_point,
             trade_direction,
-        )? {
+        )? 
+        {
             validate_single_swap_instruction(&ctx.accounts.pool.key(), ctx.remaining_accounts)?;
         }
     }
 
-    // validate if it is over threshold
+    //@>i if pool's quote_reserve < threshold (means curve is lower than migration threshold)
+    //@>i no more swap can be completed if pool's bonding curve is migration completed
+    // validate if it is over migration threshold
     require!(
         !pool.is_curve_complete(config.migration_quote_threshold),
         PoolError::PoolIsCompleted
@@ -191,6 +195,7 @@ pub fn handle_swap_wrapper(ctx: Context<SwapCtx>, params: SwapParameters2) -> Re
 
     // update for dynamic fee reference
     let current_timestamp = Clock::get()?.unix_timestamp as u64;
+    
     pool.update_pre_swap(&config, current_timestamp)?;
 
     let fee_mode = &FeeMode::get_fee_mode(config.collect_fee_mode, trade_direction, has_referral)?;

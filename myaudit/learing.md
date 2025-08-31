@@ -18,4 +18,7 @@ if let Ok(rate_limiter) = &rate_limiter
 ```
 if result is Ok use inner struct
 
+## what is a bonding curve?
+when you want to launch a token you need this curve and use AMM Migration Lifecycle to transfer to the amm after a threshold
+
 

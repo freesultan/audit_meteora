@@ -34,7 +34,7 @@ use ruint::aliases::U256;
 pub struct FeeRateLimiter {
     pub cliff_fee_numerator: u64,
     pub fee_increment_bps: u16,
-    pub max_limiter_duration: u64,
+    pub max_limiter_duration: u64,//@>q what's this? 
     pub reference_amount: u64,
 }
 
@@ -49,13 +49,15 @@ impl FeeRateLimiter {
             return Ok(false);
         }
 
+        //@>q why does it only return true if quoteToBase?
         // only handle for the case quote to base and collect fee mode in quote token
         if trade_direction == TradeDirection::BaseToQuote {
             return Ok(false);
         }
-
+        //@>q activation_point and max_limiter_duration are seemingly fixed. why last_effective_rate_limiter_point is always the same? 
         let last_effective_rate_limiter_point =
             u128::from(activation_point).safe_add(self.max_limiter_duration.into())?;
+
         if u128::from(current_point) > last_effective_rate_limiter_point {
             return Ok(false);
         }
