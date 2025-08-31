@@ -1,6 +1,18 @@
-## Excalidraw link
-[excalidraw](https://excalidraw.com/#json=IKq0bnBoGAZwlC17fU-X9,u5DHQ6AosXLgg9n9b2rN2Q)
+## Attack Idea
+- Dos
+- Calculations
+- Double spend
+- skip limitations
 
+sometime protocol works wrongly
+sometime you exploit a correct working protocol
+
+
+
+## Excalidraw link
+[excalidraw](https://excalidraw.com/#json=S_28srAQ6KWG137IOHD49,bljmUv4g2nmVLc3NoFobSw)
+## code2Tut
+[link](https://code2tutorial.com/tutorial/fe10879a-a9e3-45eb-a85e-4ca8e449b1fb/01_bonding_curve_mechanics_.md)
 ## TEST
 
 Use `anchor test tests/yourtest.tests.ts` instead of 'pnpm test'

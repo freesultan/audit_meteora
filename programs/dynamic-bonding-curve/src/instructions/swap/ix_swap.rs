@@ -196,7 +196,8 @@ pub fn handle_swap_wrapper(ctx: Context<SwapCtx>, params: SwapParameters2) -> Re
     // update for dynamic fee reference
     let current_timestamp = Clock::get()?.unix_timestamp as u64;
     
-    pool.update_pre_swap(&config, current_timestamp)?;
+    //@>i if config.dynamicFee is enables update refrences in fee.rs
+     pool.update_pre_swap(&config, current_timestamp)?;
 
     let fee_mode = &FeeMode::get_fee_mode(config.collect_fee_mode, trade_direction, has_referral)?;
 

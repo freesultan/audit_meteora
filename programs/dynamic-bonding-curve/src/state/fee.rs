@@ -85,6 +85,7 @@ impl VolatilityTracker {
         current_timestamp: u64,
     ) -> Result<()> {
         let elapsed = current_timestamp.safe_sub(self.last_update_timestamp)?;
+        //@>q is filter_period for low frequency swaps? the elapsed time from last swap should be more than the filter_period
         // Not high frequency trade
         if elapsed >= dynamic_fee_config.filter_period as u64 {
             // Update sqrt of last transaction
@@ -95,7 +96,7 @@ impl VolatilityTracker {
                     .volatility_accumulator
                     .safe_mul(dynamic_fee_config.reduction_factor.into())?
                     .safe_div(BASIS_POINT_MAX.into())?;
-
+                //@>i volatility_reference = volatility_accumulator * reduction_factor / BASIS_POINT_MAX
                 self.volatility_reference = volatility_reference;
             }
             // Out of decay time window
