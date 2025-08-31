@@ -37,14 +37,16 @@ use super::fee::{FeeOnAmountResult, VolatilityTracker};
 )]
 // https://www.desmos.com/calculator/oxdndn2xdx
 pub enum BaseFeeMode {
+    //@>i this is dynamic fee calculation. On each period the fee decreases
     // fee = cliff_fee_numerator - passed_period * reduction_factor
     FeeSchedulerLinear,
     // fee = cliff_fee_numerator * (1-reduction_factor/10_000)^passed_period
     FeeSchedulerExponential,
     // TODO
-    RateLimiter,
+    RateLimiter, //@>q not used in this version? 
 }
 
+//@>q when we use zero_copy attr we must take care of the order of memory access. is it ok here?
 #[zero_copy]
 #[derive(Debug, InitSpace, Default)]
 pub struct PoolFeesConfig {
@@ -222,20 +224,21 @@ impl PoolFeesConfig {
         Ok((trading_fee, protocol_fee, referral_fee))
     }
 }
-
-#[zero_copy]
+//@>i InitSpace calculates the size of the struct in bytes
+#[zero_copy] //@>i does not deserialize into any struct. memory access order is important
 #[derive(Debug, InitSpace, Default)]
 pub struct BaseFeeConfig {
     pub cliff_fee_numerator: u64,
     // reverse order to ensure it is backward-compatible on fee scheduler
     // first_factor: number_of_period, period_frequency: second_factor, reduction_factor: third_factor
-    pub second_factor: u64,
-    pub third_factor: u64,
-    pub first_factor: u16,
-    pub base_fee_mode: u8,
-    pub padding_0: [u8; 5],
+    pub second_factor: u64, //@>i periods frequency
+    pub third_factor: u64,  //@>i reduction factor
+    pub first_factor: u16, //@>i num of periods
+    pub base_fee_mode: u8,//@>i linear, exponential, rate limiting
+    pub padding_0: [u8; 5],//@>i 5 1byte space for padding and future change in the struct
 }
-
+//@>i this macro is a compile time check  for basefeeconfig size to be equals to 32 bytes
+//@>i 8 + 8 + 8 + 2 + 1 + 5(padding) = 32
 const_assert_eq!(BaseFeeConfig::INIT_SPACE, 32);
 
 impl BaseFeeConfig {
@@ -243,6 +246,7 @@ impl BaseFeeConfig {
         let base_fee_mode =
             BaseFeeMode::try_from(self.base_fee_mode).map_err(|_| PoolError::InvalidBaseFeeMode)?;
         if base_fee_mode == BaseFeeMode::RateLimiter {
+            //@>test: very important test
             Ok(FeeRateLimiter {
                 cliff_fee_numerator: self.cliff_fee_numerator,
                 reference_amount: self.third_factor,

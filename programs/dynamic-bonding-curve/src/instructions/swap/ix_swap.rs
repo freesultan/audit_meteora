@@ -166,11 +166,14 @@ pub fn handle_swap_wrapper(ctx: Context<SwapCtx>, params: SwapParameters2) -> Re
     //@>i get current point in slot or timestamp
     let current_point = get_current_point(config.activation_type)?;
 
+    //@>q this is a protection agains sniper attacks, is there a way to skip it? 
     // another validation to prevent snipers to craft multiple swap instructions in 1 tx
     // (if we dont do this, they are able to concat 16 swap instructions in 1 tx)
     let rate_limiter = config.pool_fees.base_fee.get_fee_rate_limiter();
-    
+    //@>i rate_limiter is a Result<FeeRateLimiter, _> struct
+
     if let Ok(rate_limiter) = &rate_limiter {
+        //@>i rate_limiter is a free_rate_limiter
         if rate_limiter.is_rate_limiter_applied(
             current_point,
             pool.activation_point,

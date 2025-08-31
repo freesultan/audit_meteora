@@ -11,5 +11,11 @@ curl --insecure https://api.mainnet-beta.solana.com   -X POST -H "Content-Type: 
 ## what is a sniper attack?
 A bot/mallicious bundle more than one swap instructions into one transaction to extract more value out of their swap at the expense of regular users. 
 
+## if let : to test and unpack a result() package
+
+```
+if let Ok(rate_limiter) = &rate_limiter
+```
+if result is Ok use inner struct
 
 
