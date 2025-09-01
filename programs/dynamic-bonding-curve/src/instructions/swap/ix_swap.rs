@@ -199,12 +199,19 @@ pub fn handle_swap_wrapper(ctx: Context<SwapCtx>, params: SwapParameters2) -> Re
     //@>i if config.dynamicFee is enables update refrences in fee.rs
      pool.update_pre_swap(&config, current_timestamp)?;
 
+     /*@>i collect fee mode: quote or base. 
+     feemode: 
+    pub fees_on_input: bool,
+    pub fees_on_base_token: bool,
+    pub has_referral: bool
+    */
+
     let fee_mode = &FeeMode::get_fee_mode(config.collect_fee_mode, trade_direction, has_referral)?;
 
     let process_swap_params = ProcessSwapParams {
         pool: &mut pool,
         config: &config,
-        fee_mode,
+        fee_mode, //@>i feeOnBase? feeOnInput?
         trade_direction,
         current_point,
         amount_0,
