@@ -96,13 +96,14 @@ pub fn handle_create_locker(ctx: Context<CreateLockerCtx>) -> Result<()> {
 
     // Send some lamport to pool authority to pay rent fee?
     msg!("transfer lamport to pool authority");
+    //@>i invoke cpi to system program to transfer lamports
     invoke(
         &system_instruction::transfer(
             &ctx.accounts.payer.key(),
             &ctx.accounts.pool_authority.key(),
             10_000_000, // TODO calculate correct lamport here
         ),
-        &[
+        &[ //@>i we must determine which accounts are needed for the cpi
             ctx.accounts.payer.to_account_info(),
             ctx.accounts.pool_authority.to_account_info(),
             ctx.accounts.system_program.to_account_info(),
