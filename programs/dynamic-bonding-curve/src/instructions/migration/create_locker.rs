@@ -6,6 +6,7 @@ use crate::{
 };
 use anchor_lang::solana_program::{program::invoke, system_instruction};
 use anchor_spl::token_interface::{TokenAccount, TokenInterface};
+//@>q where is CreateVestingEscrowV2 defined? 
 use locker::cpi::accounts::CreateVestingEscrowV2;
 
 #[derive(Accounts)]
@@ -73,7 +74,7 @@ pub struct CreateLockerCtx<'info> {
 
 pub fn handle_create_locker(ctx: Context<CreateLockerCtx>) -> Result<()> {
     let mut virtual_pool = ctx.accounts.virtual_pool.load_mut()?;
-
+    //@>q how can attacker change migrationProgress to make a dos attack?
     require!(
         virtual_pool.get_migration_progress()? == MigrationProgress::PostBondingCurve,
         PoolError::NotPermitToDoThisAction
@@ -81,6 +82,10 @@ pub fn handle_create_locker(ctx: Context<CreateLockerCtx>) -> Result<()> {
 
     let config = ctx.accounts.config.load()?;
 
+    //@>q why is to_locked_vesting_params not called directly in to_create_vesting_escrow_params?
+    //@>q what if locked_vesting_config is None?
+    //@>q should we check if locked_vesting_config is valid?
+    //@>q what if to_locked_vesting_params fails?
     let locked_vesting_params = config.locked_vesting_config.to_locked_vesting_params();
 
     let vesting_params = locked_vesting_params

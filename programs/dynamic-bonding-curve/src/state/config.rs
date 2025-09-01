@@ -330,9 +330,9 @@ impl DynamicFeeConfig {
 #[zero_copy]
 #[derive(Debug, InitSpace, Default)]
 pub struct LockedVestingConfig {
-    pub amount_per_period: u64,
-    pub cliff_duration_from_migration_time: u64,
-    pub frequency: u64,
+    pub amount_per_period: u64,//@>i how much token released in each period
+    pub cliff_duration_from_migration_time: u64, //@>i cliff duration to start vesting after migration with cliff unlock amount
+    pub frequency: u64,//@>i frequency of each period
     pub number_of_period: u64,
     pub cliff_unlock_amount: u64,
     pub _padding: u64,
