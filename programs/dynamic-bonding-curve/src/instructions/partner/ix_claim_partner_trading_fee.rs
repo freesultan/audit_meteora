@@ -17,7 +17,7 @@ pub struct ClaimTradingFeesCtx<'info> {
         address = const_pda::pool_authority::ID
     )]
     pub pool_authority: UncheckedAccount<'info>,
-
+    
     #[account(has_one=quote_mint, has_one=fee_claimer)]
     pub config: AccountLoader<'info, PoolConfig>,
 

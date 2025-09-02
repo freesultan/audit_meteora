@@ -1,0 +1,1 @@
+# [M-1] attacker can frontrun a tx and do ix_initialize_virtual_pool with his crafted ctx and params to create a new token and pool. Hence does not let others to launch a token and make himself the creator of the pool and receives the creator fees.
