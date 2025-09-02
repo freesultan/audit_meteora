@@ -76,13 +76,15 @@ impl PoolFeesConfig {
         included_fee_amount: u64,
         trade_direction: TradeDirection,
     ) -> Result<u64> {
+        //@>i get base fee handler based on base_fee_mode (0: FeeSchedulerLinear, 1: FeeSchedulerExponential, 2: RateLimiter)
         let base_fee_handler = self.base_fee.get_base_fee_handler()?;
 
+        //@>i returns cliff_numerator - (num of passed_period * reduction_factor)
         let base_fee_numerator = base_fee_handler.get_base_fee_numerator_from_included_fee_amount(
             current_point,
             activation_point,
             trade_direction,
-            included_fee_amount,
+            included_fee_amount, //@>q why we need included_fee_amount here? it is not used in fee calculation in fee_scheduler.rs
         )?;
 
         self.get_total_fee_numerator(base_fee_numerator, volatility_tracker)
@@ -113,12 +115,14 @@ impl PoolFeesConfig {
         base_fee_numerator: u64,
         volatility_tracker: &VolatilityTracker,
     ) -> Result<u64> {
+        //@>q is the calcs what the protocol intended which is protect LPs from impermanent loss?
+        //@>i variable_fee + base_fee = ceil(((volatility_accumulator × bin_step)² × variable_fee_control) / 1e11) + base_fee_numerator
         let total_fee_numerator = self
             .dynamic_fee
             .get_variable_fee_numerator(volatility_tracker)?
             .safe_add(base_fee_numerator.into())?;
 
-        // Cap the total fee at MAX_FEE_NUMERATOR
+        // Cap the total fee at MAX_FEE_NUMERATOR 
         let total_fee_numerator = if total_fee_numerator > MAX_FEE_NUMERATOR.into() {
             MAX_FEE_NUMERATOR
         } else {
@@ -301,6 +305,9 @@ impl DynamicFeeConfig {
     pub fn is_dynamic_fee_enable(&self) -> bool {
         self.initialized != 0
     }
+    //@>i returns variable fee numerator based on volatility tracker. Higher volatility means higher fee to protect liquidity providers from impermanent loss
+    //@>i variable_fee = ceil(((volatility_accumulator × bin_step)² × variable_fee_control) / 1e11)
+
 
     pub fn get_variable_fee_numerator(
         &self,
@@ -701,6 +708,13 @@ impl PoolConfig {
         sqrt_start_price: u128,
         curve: &[LiquidityDistributionParameters],
     ) -> Result<u64> {
+        //@>i swap_amount_buffer = swap_base_amount * (1 + SWAP_BUFFER_PERCENTAGE / 100)
+        //@>i max_base_amount_on_curve = get_base_token_for_swap(sqrt_start_price, MAX_SQRT_PRICE, &curve)
+        //@>i return min(swap_amount_buffer, max_base_amount_on_curve)
+        //@>i why we need buffer here? to ensure enough liquidity for swap after migration
+        //@>i if we do not have enough liquidity, users will not be able to swap
+        //@>i if we have too much liquidity, it is ok, users can always swap more than swap_base_amount
+        
         let swap_amount_buffer = u128::from(swap_base_amount)
             .safe_mul(SWAP_BUFFER_PERCENTAGE.into())?
             .safe_div(100)?
@@ -729,6 +743,7 @@ impl PoolConfig {
     }
 
     pub fn get_initial_base_supply(&self) -> Result<u64> {
+        //@>i is this dynamic supply pool or fixed supply pool?
         if self.is_fixed_token_supply() {
             Ok(self.pre_migration_token_supply)
         } else {
@@ -737,7 +752,16 @@ impl PoolConfig {
                 if self.curve[i].liquidity == 0 {
                     break;
                 }
+                //@>i push config price and liquidity to curve vec
                 curve.push(self.curve[i].to_liquidity_distribution_parameters());
+                /*@>i equivalent code
+                 curve.push(LiquidityDistributionParameters {
+                    price: self.curve[i].price,
+                    liquidity: self.curve[i].liquidity,
+                });
+                
+                 */
+               
             }
             let swap_amount_with_buffer = PoolConfig::get_swap_amount_with_buffer(
                 self.swap_base_amount,

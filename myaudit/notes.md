@@ -7,10 +7,14 @@
 sometime protocol works wrongly
 sometime you exploit a correct working protocol
 
-
+## to do:
+- read past audits (there are 3)
+- run unit tests
+- read DBC docs
+- search common solana vulns
 
 ## Excalidraw link
-[excalidraw](https://excalidraw.com/#json=S_28srAQ6KWG137IOHD49,bljmUv4g2nmVLc3NoFobSw)
+[excalidraw](https://excalidraw.com/#json=D7SbXYvKlrfDMIK8Nqogl,C96aDJvj0wGJknFx3j73Cg)
 ## code2Tut
 [link](https://code2tutorial.com/tutorial/fe10879a-a9e3-45eb-a85e-4ca8e449b1fb/01_bonding_curve_mechanics_.md)
 ## TEST

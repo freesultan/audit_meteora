@@ -44,6 +44,7 @@ impl FeeScheduler {
     //@>i u64 is an unsigned 64-bit integer type
     fn get_base_fee_numerator_by_period(&self, period: u64) -> Result<u64> {
         //@>i convert u64 to u16 safely - we are sure that this conversion will not fail
+        //@>q are you sure? test it
         //@>i because we are limiting period to number_of_period which is u16
         let period = period.min(self.number_of_period.into());
 
@@ -55,8 +56,7 @@ impl FeeScheduler {
             FeeSchedulerMode::Linear => {
                 //@>i fee_numerator = cliff_fee_numerator - (reduction_factor * period)
                 //@>i fee = starting_fee - (reduction × time_passed)
-                //@>i first ? means if the mul operation fails, return the error
-                //@>i second ? means if the sub operation fails, return the error
+                 
                 let fee_numerator = self
                     .cliff_fee_numerator
                     .safe_sub(self.reduction_factor.safe_mul(period)?)?;
@@ -72,10 +72,11 @@ impl FeeScheduler {
     }
 
     fn get_base_fee_numerator(&self, current_point: u64, activation_point: u64) -> Result<u64> {
+        //@>q in what conditions period frequency is 0?  
         if self.period_frequency == 0 {
             return Ok(self.cliff_fee_numerator);
         }
-
+        //@>i period = (current_point - activation_point) / period_frequency
         let period = current_point
             .safe_sub(activation_point)?
             .safe_div(self.period_frequency)?;

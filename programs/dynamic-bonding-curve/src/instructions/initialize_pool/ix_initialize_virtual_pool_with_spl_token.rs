@@ -45,12 +45,13 @@ pub struct InitializeVirtualPoolWithSplTokenCtx<'info> {
         address = const_pda::pool_authority::ID
     )]
     pub pool_authority: AccountInfo<'info>,
-
+    //@>audit everyone can be creator of the pool?
     pub creator: Signer<'info>,
 
+    //@>i when use init, a new account will be created
     #[account(
         init,
-        signer,
+        signer,//@>audit attacker can provide new keypair and use it 
         payer = payer,
         mint::decimals = config.load()?.token_decimal,
         mint::authority = pool_authority,
@@ -63,12 +64,31 @@ pub struct InitializeVirtualPoolWithSplTokenCtx<'info> {
     )]
     pub quote_mint: Box<InterfaceAccount<'info, MintInterface>>,
 
+
     /// Initialize an account to store the pool state
     #[account(
-        init,
+        init, //@>i this fails if the pool already exists
+        //@>audit this seeds can be front-run by attacker to create pool before the creator 
+        /*
+        can he become an owner of the pool? or just pay the rent?
+        what are the costs for the attacker and what can he gain? if he just pays the rent, it is not a big deal
+        if he can become the owner of the pool, then it is a big deal
+        1. can he become the owner of the pool? No, because the pool account is just a data account, the owner is the program
+        2. can he drain the funds from the pool? No, because the pool authority is a PDA derived from the program id and
+        a constant seed, so only the program can sign for it
+        3. can he prevent the creator from creating the pool? Yes, by creating the pool first, but the creator can always
+        use a different seed or wait for the attacker to close the pool
+        4. can he exploit the pool in any way? No, because the pool logic is in the program, not in the account data
+        5. can he gain anything by doing this? No, because he just pays the rent for the account
+        6. is there any risk for the creator? Yes, if the attacker creates the pool first, the creator has to use a different seed
+        7. is there any risk for the protocol? No, because the pool logic is in the program, not in the account data
+        
+
+         */
         seeds = [
             POOL_PREFIX.as_ref(),
             config.key().as_ref(),
+            //@>i regardless of the order of base and quote mint, the pool address will be the same
             &max_key(&base_mint.key(), &quote_mint.key()),
             &min_key(&base_mint.key(), &quote_mint.key()),
         ],
@@ -131,15 +151,22 @@ pub struct InitializeVirtualPoolWithSplTokenCtx<'info> {
     pub system_program: Program<'info, System>,
 }
 
+//@>audit an attacker can call this with his own ctx which is front-run by him creating pool first
+// and then he can become the creator of the pool? can creator receives creator fees 
+
 pub fn handle_initialize_virtual_pool_with_spl_token<'c: 'info, 'info>(
     ctx: Context<'_, '_, 'c, 'info, InitializeVirtualPoolWithSplTokenCtx<'info>>,
     params: InitializePoolParameters,
 ) -> Result<()> {
+
     let config = ctx.accounts.config.load()?;
+
     let initial_base_supply = config.get_initial_base_supply()?;
 
+    //@>i ensure the token type is SplToken
     let token_type_value =
         TokenType::try_from(config.token_type).map_err(|_| PoolError::InvalidTokenType)?;
+
     require!(
         token_type_value == TokenType::SplToken,
         PoolError::InvalidTokenType
@@ -167,13 +194,15 @@ pub fn handle_initialize_virtual_pool_with_spl_token<'c: 'info, 'info>(
 
     // mint token
     let seeds = pool_authority_seeds!(const_pda::pool_authority::BUMP);
+
+    //@>i this is cpi(cross program invocation) to mint initial supply of base token to base vault
     anchor_spl::token::mint_to(
         CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
             MintTo {
-                mint: ctx.accounts.base_mint.to_account_info(),
-                to: ctx.accounts.base_vault.to_account_info(),
-                authority: ctx.accounts.pool_authority.to_account_info(),
+                mint: ctx.accounts.base_mint.to_account_info(),//@>i mint account
+                to: ctx.accounts.base_vault.to_account_info(),//@>i token account to receive minted tokens
+                authority: ctx.accounts.pool_authority.to_account_info(),//@>i pool authority is the mint authority
             },
             &[&seeds[..]],
         ),
@@ -205,7 +234,7 @@ pub fn handle_initialize_virtual_pool_with_spl_token<'c: 'info, 'info>(
     pool.initialize(
         VolatilityTracker::default(),
         ctx.accounts.config.key(),
-        ctx.accounts.creator.key(),
+        ctx.accounts.creator.key(), //@>q attacker can become creator? Should we validate creator's identity? 
         ctx.accounts.base_mint.key(),
         ctx.accounts.base_vault.key(),
         ctx.accounts.quote_vault.key(),

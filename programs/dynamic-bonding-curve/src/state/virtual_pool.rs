@@ -464,6 +464,8 @@ impl VirtualPool {
                 trade_direction,
             )?;
 
+
+        //@>i if fees_on_input is true, we need to calculate actual amount in by removing fees from amount_in
         let actual_amount_in = if fee_mode.fees_on_input {
             let FeeOnAmountResult {
                 amount,
@@ -485,6 +487,7 @@ impl VirtualPool {
             amount_in
         };
 
+        //@>i main swap function that calculates output amount and next sqrt price
         let SwapAmountFromInput {
             output_amount,
             next_sqrt_price,
@@ -500,7 +503,7 @@ impl VirtualPool {
 
         let actual_amount_out = if fee_mode.fees_on_input {
             output_amount
-        } else {
+        } else { //@>i if fees_on_input is false, we need to calculate actual amount out by removing fees from output_amount
             let FeeOnAmountResult {
                 amount,
                 protocol_fee,

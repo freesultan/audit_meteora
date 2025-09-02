@@ -15,7 +15,7 @@ pub fn process_swap_exact_in(params: ProcessSwapParams<'_>) -> Result<ProcessSwa
         current_point,
         ..
     } = params;
-
+    //@>i get swap result from exact input amount ( the main function that calculates swap output amount, fees, and price impact)
     let swap_result = pool.get_swap_result_from_exact_input(
         config,
         amount_in,
@@ -23,7 +23,7 @@ pub fn process_swap_exact_in(params: ProcessSwapParams<'_>) -> Result<ProcessSwa
         trade_direction,
         current_point,
     )?;
-
+    //@>q how can attackers exploit the max_swallow_quote_amount for a DoS?
     require!(
         swap_result.amount_left <= config.get_max_swallow_quote_amount()?,
         PoolError::SwapAmountIsOverAThreshold

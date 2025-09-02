@@ -60,7 +60,7 @@ pub struct SwapCtx<'info> {
     /// CHECK: pool authority
     #[account(
         address = const_pda::pool_authority::ID,
-    )]    
+    )]
     pub pool_authority: AccountInfo<'info>,
 
     /// config key
@@ -117,8 +117,7 @@ impl<'info> SwapCtx<'info> {
 }
 
 pub fn handle_swap_wrapper(ctx: Context<SwapCtx>, params: SwapParameters2) -> Result<()> {
-
-     let SwapParameters2 {
+    let SwapParameters2 {
         amount_0,
         amount_1,
         swap_mode,
@@ -158,7 +157,7 @@ pub fn handle_swap_wrapper(ctx: Context<SwapCtx>, params: SwapParameters2) -> Re
     require!(amount_0 > 0, PoolError::AmountIsZero);
 
     let has_referral = ctx.accounts.referral_token_account.is_some();
-    //@>i config and pool are both accountLoaders 
+    //@>i config and pool are both accountLoaders
     //@>i config is immutable (only read)
     let config = ctx.accounts.config.load()?;
     //@>i pool is mutable (read/write)
@@ -166,7 +165,7 @@ pub fn handle_swap_wrapper(ctx: Context<SwapCtx>, params: SwapParameters2) -> Re
     //@>i get current point in slot or timestamp
     let current_point = get_current_point(config.activation_type)?;
 
-    //@>q this is a protection agains sniper attacks, is there a way to skip it? 
+    //@>q this is a protection agains sniper attacks, is there a way to skip it?
     // another validation to prevent snipers to craft multiple swap instructions in 1 tx
     // (if we dont do this, they are able to concat 16 swap instructions in 1 tx)
     let rate_limiter = config.pool_fees.base_fee.get_fee_rate_limiter();
@@ -179,8 +178,7 @@ pub fn handle_swap_wrapper(ctx: Context<SwapCtx>, params: SwapParameters2) -> Re
             current_point,
             pool.activation_point,
             trade_direction,
-        )? 
-        {
+        )? {
             validate_single_swap_instruction(&ctx.accounts.pool.key(), ctx.remaining_accounts)?;
         }
     }
@@ -195,12 +193,12 @@ pub fn handle_swap_wrapper(ctx: Context<SwapCtx>, params: SwapParameters2) -> Re
 
     // update for dynamic fee reference
     let current_timestamp = Clock::get()?.unix_timestamp as u64;
-    
-    //@>i if config.dynamicFee is enables update refrences in fee.rs
-     pool.update_pre_swap(&config, current_timestamp)?;
 
-     /*@>i collect fee mode: quote or base. 
-     feemode: 
+    //@>i if config.dynamicFee is enables update refrences in fee.rs
+    pool.update_pre_swap(&config, current_timestamp)?;
+
+    /*@>i collect fee mode: quote or base.
+     feemode:
     pub fees_on_input: bool,
     pub fees_on_base_token: bool,
     pub has_referral: bool
@@ -344,6 +342,7 @@ pub fn handle_swap_wrapper(ctx: Context<SwapCtx>, params: SwapParameters2) -> Re
     }
 
     Ok(())
+}
 //@>q how can attacker skip this validation?
 pub fn validate_single_swap_instruction<'c, 'info>(
     pool: &Pubkey,
