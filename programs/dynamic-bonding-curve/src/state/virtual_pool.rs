@@ -825,7 +825,7 @@ impl VirtualPool {
         &mut self,
         config: &PoolConfig,
         swap_result: &SwapResult,
-        fee_mode: &FeeMode,
+        fee_mode: &FeeMode,//@>i on input or base
         trade_direction: TradeDirection,
         current_timestamp: u64,
     ) -> Result<()> {

