@@ -1,10 +1,10 @@
-import { BN } from "@coral-xyz/anchor";
+import { BN } from "@coral-xyz/anchor";//@>i anchor uses BN.js to support big numbers in js. for example 64b (2^64-1)
 import { PublicKey } from "@solana/web3.js";
 
 export const DYNAMIC_BONDING_CURVE_PROGRAM_ID = new PublicKey(
   "dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN"
 );
-
+//@>i solana program for NFT and Token metadata
 export const METAPLEX_PROGRAM_ID = new PublicKey(
   "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
 );

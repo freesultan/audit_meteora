@@ -21,7 +21,7 @@ import {
 import { NATIVE_MINT } from "@solana/spl-token";
 import { getVirtualPool } from "./utils/fetcher";
 
-describe("Front-running Attack PoC", () => {
+describe.only("Front-running Attack PoC", () => {
   let context: ProgramTestContext;
   let admin: Keypair;
   let partner: Keypair;
@@ -48,13 +48,20 @@ describe("Front-running Attack PoC", () => {
   });
 
   it("Setup pool configuration", async () => {
+
     const baseFee: BaseFee = {
       cliffFeeNumerator: new BN(2_500_000),
-      firstFactor: 0,
-      secondFactor: new BN(0),
-      thirdFactor: new BN(0),
-      baseFeeMode: 0,
+      firstFactor: 0,// numof periods
+      secondFactor: new BN(0), //  periods frequency
+      thirdFactor: new BN(0), // reduction factor
+      baseFeeMode: 0, // linear
     };
+    console.log("=== Base Fee Configuration ===");
+    console.log(`Cliff Fee Numerator: ${baseFee.cliffFeeNumerator.toString()}`);
+    console.log(`First Factor: ${baseFee.firstFactor}`);
+    console.log(`Second Factor: ${baseFee.secondFactor.toString()}`);
+    console.log(`Third Factor: ${baseFee.thirdFactor.toString()}`);
+    console.log(`Base Fee Mode: ${baseFee.baseFeeMode}`);
 
     const curves = [];
     for (let i = 1; i <= 16; i++) {
@@ -70,6 +77,12 @@ describe("Front-running Attack PoC", () => {
         });
       }
     }
+    console.log("\n=== Curve Configuration ===");
+    curves.forEach((curve, index) => {
+      console.log(`Curve ${index + 1}:`);
+      console.log(`  Sqrt Price: ${curve.sqrtPrice.toString()}`);
+      console.log(`  Liquidity: ${curve.liquidity.toString()}`);
+    });
 
     const instructionParams: ConfigParameters = {
       poolFees: {

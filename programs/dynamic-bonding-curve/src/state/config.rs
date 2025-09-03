@@ -561,6 +561,7 @@ pub struct PoolConfig {
     pub _padding_2: u128,
     /// minimum price
     pub sqrt_start_price: u128,
+    //@>i important: 20 ticks are on the curve
     /// curve, only use 20 point firstly, we can extend that latter
     // each distribution will include curve[i].sqrt_price + curve[i+1].sqrt_price + curve[i+1].liquidity
     // for the first: sqrt_start_price + curve[0].sqrt_price + curve[0].liquidity
