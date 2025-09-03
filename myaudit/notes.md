@@ -1,8 +1,11 @@
 ## Attack Idea
 - Dos
-- Calculations
+- Calculations: fee calculations
 - Double spend
-- skip limitations
+- skip limitations : skip the fee
+- access control for storage accounts. is the owner a legitimate program?
+- Cross-program invocation (CPI) vulnerabilities
+- input validation
 
 sometime protocol works wrongly
 sometime you exploit a correct working protocol
