@@ -16,6 +16,21 @@ sometime you exploit a correct working protocol
 - read DBC docs
 - search common solana vulns
 
+
+## past audits 
+[link](https://github.com/MeteoraAg/audits/)
+
+## current UI
+[dlmm create](https://app.meteora.ag/dlmm/create)
+[pools](https://app.meteora.ag/)
+
+## current related programs
+```
+DAMM v2 Program	cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG
+DAMM v1 Program	Eo7WjKq67rjJQSZxS6z3YkapzY3eMj6Xy8X5EQVn5UaB
+DBC Program	dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN
+```
+
 ## Excalidraw link
 [excalidraw](https://excalidraw.com/#json=G9DPV5FpdmK9Y2-IiOqbO,28Trov9k0Twnt0QDyuS93Q)
 
