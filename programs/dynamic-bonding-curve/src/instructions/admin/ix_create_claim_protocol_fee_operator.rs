@@ -34,6 +34,7 @@ pub struct CreateClaimFeeOperatorCtx<'info> {
 
 pub fn handle_create_claim_fee_operator(ctx: Context<CreateClaimFeeOperatorCtx>) -> Result<()> {
     let mut claim_fee_operator = ctx.accounts.claim_fee_operator.load_init()?;
+    //@>q what does this do? create an accoount with operator and payer = admin
     claim_fee_operator.initialize(ctx.accounts.operator.key())?;
 
     emit_cpi!(EvtCreateClaimFeeOperator {

@@ -11,7 +11,7 @@ pub mod admin {
 
 pub mod treasury {
     use anchor_lang::{prelude::Pubkey, solana_program::pubkey};
-
+    //@>i a multisig on squads.so with 8 members and 
     // https://app.squads.so/squads/4EWqcx3aNZmMetCnxwLYwyNjan6XLGp3Ca2W316vrSjv/treasury
     pub const ID: Pubkey = pubkey!("4EWqcx3aNZmMetCnxwLYwyNjan6XLGp3Ca2W316vrSjv");
 }

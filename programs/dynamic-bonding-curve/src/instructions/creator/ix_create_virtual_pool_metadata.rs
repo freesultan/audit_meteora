@@ -43,7 +43,7 @@ pub struct CreateVirtualPoolMetadataCtx<'info> {
     /// System program.
     pub system_program: Program<'info, System>,
 }
-
+//@>q only creator can be signer of this? payer must be payer pubkey? or both payer and creator must sign to call this?s
 pub fn handle_create_virtual_pool_metadata(
     ctx: Context<CreateVirtualPoolMetadataCtx>,
     metadata: CreateVirtualPoolMetadataParameters,

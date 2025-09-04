@@ -63,6 +63,8 @@ pub fn handle_protocol_withdraw_surplus(ctx: Context<ProtocolWithdrawSurplusCtx>
         PoolError::SurplusHasBeenWithdraw
     );
 
+    //@>i total_surplus = quote_reserve - migration_threshold (what remained in the vault after migration)
+    //@>i protocol_suplus = (total_surplus) - total_surplus(PARTNER_AND_CREATOR_SURPLUS_SHARE /100)
     let protocol_surplus_amount = pool.get_protocol_surplus(config.migration_quote_threshold)?;
 
     transfer_from_pool(
@@ -75,7 +77,7 @@ pub fn handle_protocol_withdraw_surplus(ctx: Context<ProtocolWithdrawSurplusCtx>
         const_pda::pool_authority::BUMP,
     )?;
 
-    // Update protocol withdraw surplus
+    // Update protocol withdraw surplus //@>i set is_protocol_withdraw_surplus =1 (one time function for withdraw protocol surplus)
     pool.update_protocol_withdraw_surplus();
 
     emit_cpi!(EvtProtocolWithdrawSurplus {

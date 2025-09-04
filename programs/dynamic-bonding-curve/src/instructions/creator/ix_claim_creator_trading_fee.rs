@@ -26,7 +26,7 @@ pub struct ClaimCreatorTradingFeesCtx<'info> {
     #[account(mut)]
     pub token_a_account: Box<InterfaceAccount<'info, TokenAccount>>,
 
-    /// The treasury token b account
+    /// The treasury token b account //@>q how do we know this is treasury token b account?
     #[account(mut)]
     pub token_b_account: Box<InterfaceAccount<'info, TokenAccount>>,
 
@@ -53,6 +53,7 @@ pub struct ClaimCreatorTradingFeesCtx<'info> {
     pub token_quote_program: Interface<'info, TokenInterface>,
 }
 
+//@>q signer must be creator and fee will be sent to the treasury??
 /// creator claim fees.
 pub fn handle_claim_creator_trading_fee(
     ctx: Context<ClaimCreatorTradingFeesCtx>,
@@ -60,9 +61,13 @@ pub fn handle_claim_creator_trading_fee(
     max_quote_amount: u64,
 ) -> Result<()> {
     let mut pool = ctx.accounts.pool.load_mut()?;
+    //@>i returns creator base and quote fee
     let (token_base_amount, token_quote_amount) =
         pool.claim_creator_trading_fee(max_base_amount, max_quote_amount)?;
 
+    //@>q who is the token_a_account owner or authority? we
+
+    //@>i token_base_amount trasnfers to token_a_account
     transfer_from_pool(
         ctx.accounts.pool_authority.to_account_info(),
         &ctx.accounts.base_mint,
@@ -72,6 +77,7 @@ pub fn handle_claim_creator_trading_fee(
         token_base_amount,
         const_pda::pool_authority::BUMP,
     )?;
+    //@>i token_quote_amount trasnfers to token_b_account
 
     transfer_from_pool(
         ctx.accounts.pool_authority.to_account_info(),

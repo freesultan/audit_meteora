@@ -56,6 +56,9 @@ pub struct ClaimProtocolFeesCtx<'info> {
     )]
     pub token_quote_account: Box<InterfaceAccount<'info, TokenAccount>>,
 
+
+    //@>i access control: only operator pubkey specified in claim_fee_operator operator field can sign
+    //@>i what will happen if one of the accounts conditions not met? functions revert or ...?
     /// Claim fee operator
     #[account(has_one = operator)]
     pub claim_fee_operator: AccountLoader<'info, ClaimFeeOperator>,

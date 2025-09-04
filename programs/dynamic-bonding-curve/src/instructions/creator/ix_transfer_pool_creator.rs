@@ -34,11 +34,16 @@ pub fn handle_transfer_pool_creator<'c: 'info, 'info>(
 
     let migration_progress = pool.get_migration_progress()?;
     let config = ctx.accounts.config.load()?;
+
+    //@>i creator can only transfer pool creator if it's prebondingCurve or poolCreated
+    //@>i if it's postBonding or Vesting can not be transfered. //@>q why? mybe becaus pool started creating and not yet completed
     match migration_progress {
         MigrationProgress::PreBondingCurve => {
             // always work
         }
         MigrationProgress::CreatedPool => {
+            //@>i migrationOption {Meteora DAMM, DAMM V2}
+            //@>q test this if it can not be exploited
             let migration_option = MigrationOption::try_from(config.migration_option)
                 .map_err(|_| PoolError::InvalidMigrationOption)?;
             if migration_option == MigrationOption::MeteoraDamm {

@@ -22,3 +22,6 @@ if result is Ok use inner struct
 when you want to launch a token you need this curve and use AMM Migration Lifecycle to transfer to the amm after a threshold
 
 
+## admin
+- operators can claim protocol fee to the treasury
+- everyone can withdraw protocol quote surplus to the treasury

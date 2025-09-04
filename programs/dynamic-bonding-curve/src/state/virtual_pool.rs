@@ -164,6 +164,7 @@ pub struct PoolMetrics {
 const_assert_eq!(PoolMetrics::INIT_SPACE, 32);
 
 impl PoolMetrics {
+    //@>i add to the protocol or/and trading base and quote fees
     pub fn accumulate_fee(
         &mut self,
         protocol_fee: u64,
@@ -921,6 +922,7 @@ impl VirtualPool {
         let token_quote_amount = self.protocol_quote_fee;
         self.protocol_base_fee = 0;
         self.protocol_quote_fee = 0;
+        //@>i this line is output
         (token_base_amount, token_quote_amount)
     }
 
@@ -988,6 +990,7 @@ impl VirtualPool {
     }
 
     pub fn get_creator_surplus(&self, config: &PoolConfig, total_surplus: u64) -> Result<u64> {
+        //@>i partner_and_creator_surplus is a percentage of total_surplus(remaining quote token after migration)
         let partner_and_creator_surplus = self.get_partner_and_creator_surplus(total_surplus)?;
 
         let PartnerAndCreatorSplitFee { creator_fee, .. } =
