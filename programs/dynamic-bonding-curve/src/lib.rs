@@ -147,6 +147,7 @@ pub mod dynamic_bonding_curve {
         instructions::handle_withdraw_leftover(ctx)
     }
 
+    //@>q who and when call this?
     /// migrate damm v1
     pub fn migration_meteora_damm_create_metadata<'c: 'info, 'info>(
         ctx: Context<'_, '_, 'c, 'info, MigrationMeteoraDammCreateMetadataCtx<'info>>,

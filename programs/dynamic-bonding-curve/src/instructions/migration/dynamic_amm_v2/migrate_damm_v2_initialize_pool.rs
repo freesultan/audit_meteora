@@ -44,6 +44,7 @@ pub struct MigrateDammV2Ctx<'info> {
     )]
     pub pool_authority: AccountInfo<'info>,
 
+    //@>q what's this pool? 
     /// CHECK: pool
     #[account(mut)]
     pub pool: UncheckedAccount<'info>,
@@ -129,7 +130,7 @@ impl<'info> MigrateDammV2Ctx<'info> {
         migration_fee_option: MigrationFeeOption,
     ) -> Result<()> {
         // validate config key
-        match migration_fee_option {
+        match migration_fee_option { //@>i The % pool will earn in fee , 0.25,0.3,1,2,4,6
             MigrationFeeOption::Customizable => {
                 // nothing to check
             }
@@ -139,15 +140,17 @@ impl<'info> MigrateDammV2Ctx<'info> {
             | MigrationFeeOption::FixedBps200
             | MigrationFeeOption::FixedBps400
             | MigrationFeeOption::FixedBps600 => {
-                let base_fee_bps = to_bps(
+                let base_fee_bps = to_bps(//@>q what does this pool_fees come from?
                     damm_config.pool_fees.base_fee.cliff_fee_numerator.into(),
                     1_000_000_000, // damm v2 using the same fee denominator with virtual curve
                 )?;
+                //@>q where using or not using scheduler set?
                 // validate non fee scheduler
                 require!(
                     damm_config.pool_fees.base_fee.period_frequency == 0,
                     PoolError::InvalidConfigAccount
                 );
+                
                 migration_fee_option.validate_base_fee(base_fee_bps)?;
 
                 require!(
@@ -467,6 +470,7 @@ impl<'info> MigrateDammV2Ctx<'info> {
     }
 }
 
+//@> who calls this function? when? isn't this automatic?
 pub fn handle_migrate_damm_v2<'c: 'info, 'info>(
     ctx: Context<'_, '_, 'c, 'info, MigrateDammV2Ctx<'info>>,
 ) -> Result<()> {
@@ -487,7 +491,7 @@ pub fn handle_migrate_damm_v2<'c: 'info, 'info>(
 
     let mut virtual_pool = ctx.accounts.virtual_pool.load_mut()?;
 
-    require!(
+    require!( //@>i only in LockedVesting step, payer can call migrate_damm_v2
         virtual_pool.get_migration_progress()? == MigrationProgress::LockedVesting,
         PoolError::NotPermitToDoThisAction
     );
@@ -618,6 +622,8 @@ pub fn handle_migrate_damm_v2<'c: 'info, 'info>(
 
     let burnable_amount = config.get_burnable_amount_post_migration(left_base_token)?;
 
+
+    //@>i burn left base tokens and set the virtual pool state to createdPool
     if burnable_amount > 0 {
         let seeds = pool_authority_seeds!(const_pda::pool_authority::BUMP);
         anchor_spl::token_interface::burn(
@@ -641,6 +647,8 @@ pub fn handle_migrate_damm_v2<'c: 'info, 'info>(
     Ok(())
 }
 
+
+//@>i returns the lower liquidity amount of quote or base
 fn get_liquidity_for_adding_liquidity(
     base_amount: u64,
     quote_amount: u64,
