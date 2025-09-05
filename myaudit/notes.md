@@ -32,7 +32,7 @@ DBC Program	dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN
 ```
 
 ## Excalidraw link
-[excalidraw](https://excalidraw.com/#json=G9DPV5FpdmK9Y2-IiOqbO,28Trov9k0Twnt0QDyuS93Q)
+[excalidraw](https://excalidraw.com/#json=gE3cCmDycsswoZMn2CG99,7tloWQjuUkObeAznqa9mYA)
 
 ## code2Tut
 [link](https://code2tutorial.com/tutorial/fe10879a-a9e3-45eb-a85e-4ca8e449b1fb/01_bonding_curve_mechanics_.md)

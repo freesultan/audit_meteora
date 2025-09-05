@@ -4,6 +4,7 @@ use static_assertions::const_assert_eq;
 #[account(zero_copy)]
 #[derive(InitSpace, Debug)]
 pub struct MeteoraDammV2Metadata {
+    //@>q are these paddings secure? how an attacker sxploit this?
     /// pool
     pub virtual_pool: Pubkey,
     /// !!! BE CAREFUL to use tomestone field, previous is pool creator

@@ -45,7 +45,7 @@ pub struct CreatorWithdrawSurplusCtx<'info> {
     /// Token b program
     pub token_quote_program: Interface<'info, TokenInterface>,
 }
-
+//@>q when we say has_one= creator and creator is signer, we mean only creator pubkey can sign this tx?
 pub fn handle_creator_withdraw_surplus(ctx: Context<CreatorWithdrawSurplusCtx>) -> Result<()> {
     let config = ctx.accounts.config.load()?;
     let mut pool = ctx.accounts.virtual_pool.load_mut()?;

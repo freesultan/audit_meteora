@@ -124,6 +124,8 @@ pub fn handle_initialize_virtual_pool_with_token2022<'c: 'info, 'info>(
         PoolError::InvalidTokenType
     );
 
+
+
     let InitializePoolParameters { name, symbol, uri } = params;
 
     // initialize metadata
@@ -236,7 +238,7 @@ pub fn handle_initialize_virtual_pool_with_token2022<'c: 'info, 'info>(
         ctx.accounts.base_mint.key(),
         ctx.accounts.base_vault.key(),
         ctx.accounts.quote_vault.key(),
-        config.sqrt_start_price,
+        config.sqrt_start_price, //@>q where is config.sqrt_start_price
         PoolType::Token2022.into(),
         activation_point,
         initial_base_supply,

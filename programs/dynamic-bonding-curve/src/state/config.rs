@@ -566,6 +566,7 @@ pub struct PoolConfig {
     // each distribution will include curve[i].sqrt_price + curve[i+1].sqrt_price + curve[i+1].liquidity
     // for the first: sqrt_start_price + curve[0].sqrt_price + curve[0].liquidity
     pub curve: [LiquidityDistributionConfig; MAX_CURVE_POINT_CONFIG],
+    //@>q but to_liquidity_distribution_parameters just returs LiquidityDistributionParameters object with current sqrt_price and liquidity, not the formula you mentioned?
 }
 
 const_assert_eq!(PoolConfig::INIT_SPACE, 1040);
@@ -658,6 +659,8 @@ impl PoolConfig {
         self.migrated_dynamic_fee = migrated_dynamic_fee;
 
         for i in 0..curve.len() {
+            //@>q where is to_liquidity_distribution_config ? it is in the liquidity_distribution.rs in params folder and do the same as to_liquidity_distribution_parameters!!
+            //@>i convert an array of LiquidityDistributionParameters to an array of to_liquidity_distribution_config objects
             self.curve[i] = curve[i].to_liquidity_distribution_config();
         }
     }
@@ -750,10 +753,11 @@ impl PoolConfig {
         } else {
             let mut curve = vec![];
             for i in 0..MAX_CURVE_POINT_CONFIG {
-                if self.curve[i].liquidity == 0 {
+                if self.curve[i].liquidity == 0 { //@>i important: stops at first empty liquidity slot
                     break;
                 }
                 //@>i push config price and liquidity to curve vec
+                //@>i convert liquidity_distribution_config to LiquidityDistributionParameters
                 curve.push(self.curve[i].to_liquidity_distribution_parameters());
                 /*@>i equivalent code
                  curve.push(LiquidityDistributionParameters {
