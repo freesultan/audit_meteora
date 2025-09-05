@@ -832,7 +832,7 @@ impl PoolConfig {
             creator_lp,
         })
     }
-
+  //@>i partner is someone like creator who receives something
     pub fn get_liquidity_distribution(&self, liquidity: u128) -> Result<LiquidityDistribution> {
         let partner_locked_lp = safe_mul_div_cast_u128(
             liquidity,

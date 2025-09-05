@@ -478,6 +478,8 @@ pub fn handle_migrate_damm_v2<'c: 'info, 'info>(
     let migration_fee_option = MigrationFeeOption::try_from(config.migration_fee_option)
         .map_err(|_| PoolError::InvalidMigrationFeeOption)?;
     {
+        //@>i a vector of all accounts passed to the instruction that are not declared in the Accounts struct
+        //@>i it seems the last remaining account here is damm_config_loader
         require!(
             ctx.remaining_accounts.len() == 1,
             PoolError::MissingPoolConfigInRemainingAccount
@@ -485,6 +487,7 @@ pub fn handle_migrate_damm_v2<'c: 'info, 'info>(
         let damm_config_loader: AccountLoader<'_, damm_v2::accounts::Config> =
             AccountLoader::try_from(&ctx.remaining_accounts[0])?; // TODO fix damm config in remaning accounts
         let damm_config = damm_config_loader.load()?;
+        //@>i migration_fee_option: customizable,0.25,0.3,1,...
         ctx.accounts
             .validate_config_key(&damm_config, migration_fee_option)?;
     }
@@ -526,6 +529,7 @@ pub fn handle_migrate_damm_v2<'c: 'info, 'info>(
         migration_sqrt_price,
     )?;
 
+    //@>i Returns locked and unlocked liquidity amount for partner and creator
     let LiquidityDistribution {
         partner: partner_liquidity_distribution,
         creator: creator_liquidity_distribution,
