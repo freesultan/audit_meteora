@@ -30,6 +30,8 @@ pub struct ClaimTradingFeesCtx<'info> {
     )]
     pub pool: AccountLoader<'info, VirtualPool>,
 
+
+    //@>audit these are arbitrary accounts without any constraints. fee_claimer can claim base and quote fee amount to any account address  
     /// The treasury token a account
     #[account(mut)]
     pub token_a_account: Box<InterfaceAccount<'info, TokenAccount>>,
