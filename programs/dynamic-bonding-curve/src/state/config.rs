@@ -252,8 +252,8 @@ impl BaseFeeConfig {
         if base_fee_mode == BaseFeeMode::RateLimiter {
             //@>test: very important test
             Ok(FeeRateLimiter {
-                cliff_fee_numerator: self.cliff_fee_numerator,
-                reference_amount: self.third_factor,
+                cliff_fee_numerator: self.cliff_fee_numerator,//@>i base fee at the start of rate limiting
+                reference_amount: self.third_factor,//@>i reference amount where rate limiting starts
                 max_limiter_duration: self.second_factor,
                 fee_increment_bps: self.first_factor,
             })
@@ -598,7 +598,7 @@ impl PoolConfig {
         token_update_authority: u8,
         migration_fee: MigrationFee,
         collect_fee_mode: u8,
-        migration_option: u8,
+        migration_option: u8, //@>i 0: MeteoraDamm, 1: DammV2 // 1 means 
         activation_type: u8,
         token_decimal: u8,
         token_type: u8,
@@ -636,9 +636,9 @@ impl PoolConfig {
         self.activation_type = activation_type;
         self.token_decimal = token_decimal;
         self.swap_base_amount = swap_base_amount;
-        self.migration_quote_threshold = migration_quote_threshold;
-        self.migration_base_threshold = migration_base_threshold;
-        self.migration_sqrt_price = migration_sqrt_price;
+        self.migration_quote_threshold = migration_quote_threshold;//@>i thereshold in quote token
+        self.migration_base_threshold = migration_base_threshold;//@>i threshold in base token
+        self.migration_sqrt_price = migration_sqrt_price;//@>i migration price 
         self.sqrt_start_price = sqrt_start_price;
         self.token_type = token_type;
         self.quote_token_flag = quote_token_flag;

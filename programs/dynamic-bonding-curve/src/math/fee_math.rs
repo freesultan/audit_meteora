@@ -10,12 +10,14 @@ const MAX_EXPONENTIAL: u32 = 0x80000; // 1048576
 const SCALE_OFFSET: u32 = 64;
 
 // cliff_fee_numerator * (1-reduction_factor/10_000)^passed_period
+//@>test completely testable. test this
 pub fn get_fee_in_period(
     cliff_fee_numerator: u64,
     reduction_factor: u64,
     passed_period: u16,
 ) -> Result<u64> {
     // Make bin_step into Q64x64, and divided by BASIS_POINT_MAX. If bin_step = 1, we get 0.0001 in Q64x64
+    //@>i reduction_factor * 2^64/10000 (convert to Q64.64 and divide by 10_000)
     let bps = u128::from(reduction_factor)
         .safe_shl(SCALE_OFFSET.into())?
         .safe_div(BASIS_POINT_MAX.into())?;

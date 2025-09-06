@@ -8,6 +8,25 @@ curl --insecure https://api.mainnet-beta.solana.com   -X POST -H "Content-Type: 
 
 ```
 
+## Get account info
+
+```
+curl https://api.mainnet-beta.solana.com -X POST -H "Content-Type: application/json" -d '
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "getAccountInfo",
+  "params": [
+    "FbKf76ucsQssF7XZBuzScdJfugtsSKwZFYztKsMEhWZM",
+    {
+      "encoding": "base64",
+      "commitment": "finalized"
+    }
+  ]
+}'
+
+```
+
 ## what is a sniper attack?
 A bot/mallicious bundle more than one swap instructions into one transaction to extract more value out of their swap at the expense of regular users. 
 

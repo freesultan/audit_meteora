@@ -52,7 +52,8 @@ impl VolatilityTracker {
 
         let delta_bin_id = price_ratio.safe_sub(ONE_Q64)?.safe_div(bin_step_u128)?;
 
-        Ok(delta_bin_id.safe_mul(2)?)
+        Ok(delta_bin_id.safe_mul(2)?) //@>i the factor of 2 amplifies sensitivity
+        //@>i Δp = ((pc/pr - 1) / s) × 2 
     }
 
     pub fn update_volatility_accumulator(

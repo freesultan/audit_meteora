@@ -65,6 +65,7 @@ impl FeeScheduler {
             FeeSchedulerMode::Exponential => {
                 let period = u16::try_from(period).map_err(|_| PoolError::MathOverflow)?;
                 let fee_numerator =
+                    //@>i fee_numerator = cliff_fee_numerator * (1-reduction_factor/10_000)^passed_period
                     get_fee_in_period(self.cliff_fee_numerator, self.reduction_factor, period)?;
                 Ok(fee_numerator)
             }

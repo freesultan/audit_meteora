@@ -30,9 +30,11 @@ DAMM v2 Program	cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG
 DAMM v1 Program	Eo7WjKq67rjJQSZxS6z3YkapzY3eMj6Xy8X5EQVn5UaB
 DBC Program	dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN
 ```
+### An example config
+[config](https://solana.fm/address/FbKf76ucsQssF7XZBuzScdJfugtsSKwZFYztKsMEhWZM/transactions?cluster=mainnet-alpha)
 
 ## Excalidraw link
-[excalidraw](https://excalidraw.com/#json=Gbd13F6ntHf9Ak-RQpmjF,o1725vViU5VnpERNEvIUDQ)
+[excalidraw](https://excalidraw.com/#json=_OYFp0E4iOzmhOTcMesRA,JhXRn1xXWBzEViBc6-DjXw)
 
 ## code2Tut
 [link](https://code2tutorial.com/tutorial/fe10879a-a9e3-45eb-a85e-4ca8e449b1fb/01_bonding_curve_mechanics_.md)
