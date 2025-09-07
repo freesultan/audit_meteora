@@ -226,6 +226,7 @@ pub fn handle_swap_wrapper(ctx: Context<SwapCtx>, params: SwapParameters2) -> Re
     };
 
     let swap_result = swap_result_2.get_swap_result();
+    
     pool.apply_swap_result(
         &config,
         &swap_result,
