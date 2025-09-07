@@ -36,7 +36,7 @@ pub struct CreatePartnerMetadataCtx<'info> {
     /// System program.
     pub system_program: Program<'info, System>,
 }
-
+//@>i register partner identity and branding information on-chain
 pub fn handle_create_partner_metadata(
     ctx: Context<CreatePartnerMetadataCtx>,
     metadata: CreatePartnerMetadataParameters,

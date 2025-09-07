@@ -46,14 +46,15 @@ pub fn get_base_token_for_swap(
             curve[i - 1].sqrt_price
         };
         if curve[i].sqrt_price > sqrt_migration_price {
+            //@>i returns The amount of base tokens that would be swapped/traded when moving the price from lower_sqrt_price to upper_sqrt_price
             let delta_amount = get_delta_amount_base_unsigned_256(
                 lower_sqrt_price,
-                sqrt_migration_price,
+                sqrt_migration_price, //@>i we are at the migration price
                 curve[i].liquidity,
                 Rounding::Up, // TODO check whether we should use round down or round up
             )?;
             total_amount = total_amount.safe_add(delta_amount)?;
-            break;
+            break; //@>i we have reached the migration price, exit the loop
         } else {
             let delta_amount = get_delta_amount_base_unsigned_256(
                 lower_sqrt_price,
@@ -137,7 +138,7 @@ pub fn get_migration_threshold_price(
     curve: &[LiquidityDistributionParameters],
 ) -> Result<u128> {
     let mut next_sqrt_price = sqrt_start_price;
-
+    //@>i amount needed to move the price to next point in curve
     let total_amount = get_delta_amount_quote_unsigned_256(
         next_sqrt_price,
         curve[0].sqrt_price,

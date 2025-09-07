@@ -887,6 +887,7 @@ impl PoolConfig {
                 creator_fee: 0,
             });
         }
+        //@>i creator_fee= fee * creator_trading_fee_percentage / 100
         let creator_fee = safe_mul_div_cast_u64(
             fee,
             self.creator_trading_fee_percentage.into(),

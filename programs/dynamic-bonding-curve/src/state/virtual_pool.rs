@@ -967,6 +967,8 @@ impl VirtualPool {
     }
 
     pub fn get_total_surplus(&self, migration_threshold: u64) -> Result<u64> {
+        //@>q where does quote_reserve come from? it is a field in VirtualPool struct
+        
         Ok(self.quote_reserve.safe_sub(migration_threshold)?)
     }
 

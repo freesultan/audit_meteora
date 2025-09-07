@@ -183,6 +183,7 @@ impl LockedVestingParams {
 }
 
 impl ConfigParameters {
+    //@>q a lot of validation. how an attacker can make a dos or skip validation?
     pub fn validate<'info>(&self, quote_mint: &InterfaceAccount<'info, Mint>) -> Result<()> {
         // validate quote mint
         require!(
@@ -295,6 +296,7 @@ impl ConfigParameters {
         );
 
         for i in 1..curve_length {
+            //@>q the price is increasing and liquidity > 0? what if liquidity is very high and cause overflow in calculation?
             require!(
                 self.curve[i].sqrt_price > self.curve[i - 1].sqrt_price
                     && self.curve[i].liquidity > 0,
@@ -367,6 +369,7 @@ pub fn handle_create_config(
         ..
     } = config_parameters.clone();
 
+    //@>i returns the sqrt price at which migration should occur based on the provided migration quote threshold and curve
     let sqrt_migration_price =
         get_migration_threshold_price(migration_quote_threshold, sqrt_start_price, &curve)?;
     // migration price must be smaller than max sqrt price
@@ -374,13 +377,14 @@ pub fn handle_create_config(
         sqrt_migration_price < MAX_SQRT_PRICE,
         PoolError::InvalidCurve
     );
-
+    //@>i calculates the amount of base tokens required for swapping from the starting price to the migration price using the provided curve
     let swap_base_amount_256 =
         get_base_token_for_swap(sqrt_start_price, sqrt_migration_price, &curve)?;
     let swap_base_amount: u64 = swap_base_amount_256
         .try_into()
         .map_err(|_| PoolError::TypeCastFailed)?;
 
+    //@>i calculates the amount of base tokens required for migration based on the migration quote threshold, migration fee percentage, migration price, and migration option
     let migration_base_amount = get_migration_base_token(
         migration_quote_threshold,
         migration_fee.fee_percentage,
@@ -399,7 +403,7 @@ pub fn handle_create_config(
         if let Some(TokenSupplyParams {
             pre_migration_token_supply,
             post_migration_token_supply,
-        }) = token_supply
+        }) = token_supply //@>i if token supply is provided, it indicates a fixed supply token scenario
         {
             let swap_base_amount_buffer = PoolConfig::get_swap_amount_with_buffer(
                 swap_base_amount,
@@ -430,7 +434,7 @@ pub fn handle_create_config(
                 PoolError::InvalidTokenSupply
             );
             (1, pre_migration_token_supply, post_migration_token_supply)
-        } else {
+        } else { //@>i if no token supply is provided, it indicates a non-fixed supply token scenario (dynamic supply)
             (0, 0, 0)
         };
 

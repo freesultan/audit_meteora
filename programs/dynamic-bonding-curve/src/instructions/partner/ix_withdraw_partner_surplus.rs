@@ -60,9 +60,11 @@ pub fn handle_partner_withdraw_surplus(ctx: Context<PartnerWithdrawSurplusCtx>) 
         pool.is_partner_withdraw_surplus == 0,
         PoolError::SurplusHasBeenWithdraw
     );
+    //@>i returns: quote reserver - migration_threshold
     let total_surplus = pool.get_total_surplus(config.migration_quote_threshold)?;
     let partner_surplus_amount = pool.get_partner_surplus(&config, total_surplus)?;
 
+    //@>i transfer quote token from pool quote_vault to partner defined token account(token_quote_account)
     transfer_from_pool(
         ctx.accounts.pool_authority.to_account_info(),
         &ctx.accounts.quote_mint,
