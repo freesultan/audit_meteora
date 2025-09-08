@@ -144,7 +144,7 @@ pub fn calculate_fee(
     token_amount: u128,
     fee_numerator: u128,
     fee_denominator: u128,
-) -> Option<u128> {
+) -> Option<u128> { //@>i opetion is some or none
     if fee_numerator == 0 || token_amount == 0 {
         Some(0)
     } else {

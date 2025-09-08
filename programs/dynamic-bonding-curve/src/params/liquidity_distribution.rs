@@ -139,6 +139,7 @@ pub fn get_migration_threshold_price(
 ) -> Result<u128> {
     let mut next_sqrt_price = sqrt_start_price;
     //@>i amount needed to move the price to next point in curve
+    //@>i returns liquidity  * (upper_sqrt_price - lower_sqrt_price) rounded up
     let total_amount = get_delta_amount_quote_unsigned_256(
         next_sqrt_price,
         curve[0].sqrt_price,

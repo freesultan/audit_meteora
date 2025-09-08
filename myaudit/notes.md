@@ -11,15 +11,19 @@ sometime protocol works wrongly
 sometime you exploit a correct working protocol
 
 ## to do:
-- finish first iteration
+- finish first iteration (done)
 - distinguish main flows and actors
 - run tests with boundry and edge cases for those flows
-- 
+- ckeck all events for QA reports
+
+
+- read frankcastleaudirot reports
+
 - interact with current onchain programs using solana.fm for better understanding
 - read past audits (there are 3)
 - read DBC docs. done
 - search common solana vulns
-- ckeck all events for QA reports
+
 
 
 ## past audits 
@@ -39,7 +43,7 @@ DBC Program	dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN
 [config](https://solana.fm/address/FbKf76ucsQssF7XZBuzScdJfugtsSKwZFYztKsMEhWZM/transactions?cluster=mainnet-alpha)
 
 ## Excalidraw link
-[excalidraw](https://excalidraw.com/#json=2yWi4myTMxbLEnnQm--uU,V6pujhaI9Y8hABVBoc4NIg)
+[excalidraw](https://excalidraw.com/#json=lb04eQ-lFPjNx2ossWq7b,w3V2bfNQ9VV3y0tJDP3ODQ)
 
 ## code2Tut
 [link](https://code2tutorial.com/tutorial/fe10879a-a9e3-45eb-a85e-4ca8e449b1fb/01_bonding_curve_mechanics_.md)
