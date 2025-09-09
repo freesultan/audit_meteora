@@ -14,6 +14,9 @@ sometime you exploit a correct working protocol
 - finish first iteration (done)
 - distinguish main flows and actors
 - run tests with boundry and edge cases for those flows
+- test order: Protocol Administration → Configuration Management → Access Controls → Pool Lifecycle → Fee Distribution → Trading Mechanics → Migration Processes
+
+
 - ckeck all events for QA reports
 
 

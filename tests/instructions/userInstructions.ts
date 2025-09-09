@@ -340,15 +340,27 @@ export async function swap(
     referralTokenAccount,
   } = params;
 
+  const logTag = '[Swap Function]';
+  
+  console.log(`${logTag} 🚀 Starting swap with amountIn=${amountIn.toString()} lamports`);
+
   const poolAuthority = derivePoolAuthority();
   let poolState = await getVirtualPool(banksClient, program, pool);
+  
+  // Log initial pool state
+  console.log(`${logTag} 📊 Pool State BEFORE:`);
+  console.log(`  └─ Base Reserve: ${poolState.baseReserve.toString()}`);
+  console.log(`  └─ Quote Reserve: ${poolState.quoteReserve.toString()}`);
 
   const configState = await getConfig(banksClient, program, config);
+  
+  console.log(`${logTag} 🎯 Migration Threshold: ${configState.migrationQuoteThreshold.toString()}`);
 
   const tokenBaseProgram =
     configState.tokenType == 0 ? TOKEN_PROGRAM_ID : TOKEN_2022_PROGRAM_ID;
 
   const isInputBaseMint = inputTokenMint.equals(poolState.baseMint);
+  console.log(`${logTag} 🔄 Swap Direction: ${isInputBaseMint ? 'SOL → Base Token' : 'Base Token → SOL'}`);
 
   const quoteMint = isInputBaseMint ? outputTokenMint : inputTokenMint;
   const [inputTokenProgram, outputTokenProgram] = isInputBaseMint
@@ -362,6 +374,9 @@ export async function swap(
   const preBaseVaultBalance = (
     await getTokenAccount(banksClient, poolState.baseVault)
   ).amount;
+  
+  console.log(`${logTag} 💰 Base Vault Balance Before: ${preBaseVaultBalance.toString()}`);
+
   const [
     { ata: inputTokenAccount, ix: createInputTokenXIx },
     { ata: outputTokenAccount, ix: createOutputTokenYIx },
@@ -390,14 +405,14 @@ export async function swap(
       inputTokenAccount,
       BigInt(amountIn.toString())
     );
-
     preInstructions.push(...wrapSOLIx);
+    console.log(`${logTag} 📦 Wrapping ${amountIn.toString()} lamports SOL`);
   }
 
   if (outputTokenMint.equals(NATIVE_MINT)) {
     const unrapSOLIx = unwrapSOLInstruction(payer.publicKey);
-
     unrapSOLIx && postInstructions.push(unrapSOLIx);
+    console.log(`${logTag} 📤 Will unwrap SOL after swap`);
   }
 
   const transaction = await program.methods
@@ -417,16 +432,13 @@ export async function swap(
       tokenQuoteProgram: TOKEN_PROGRAM_ID,
       referralTokenAccount,
     })
-    .remainingAccounts(
-      // TODO should check condition to add this in remaning accounts
-      [
-        {
-          isSigner: false,
-          isWritable: false,
-          pubkey: SYSVAR_INSTRUCTIONS_PUBKEY,
-        },
-      ]
-    )
+    .remainingAccounts([
+      {
+        isSigner: false,
+        isWritable: false,
+        pubkey: SYSVAR_INSTRUCTIONS_PUBKEY,
+      },
+    ])
     .preInstructions(preInstructions)
     .postInstructions(postInstructions)
     .transaction();
@@ -440,22 +452,43 @@ export async function swap(
   transaction.recentBlockhash = (await banksClient.getLatestBlockhash())[0];
   transaction.sign(payer);
 
+  console.log(`${logTag} 🔄 Simulating transaction...`);
   let simu = await banksClient.simulateTransaction(transaction);
   const consumedCUSwap = Number(simu.meta.computeUnitsConsumed);
+  console.log(`${logTag} ⚡ Compute Units Consumed: ${consumedCUSwap}`);
 
+  console.log(`${logTag} 📡 Executing swap transaction...`);
   await processTransactionMaybeThrow(banksClient, transaction);
 
+  // Get updated pool state
   poolState = await getVirtualPool(banksClient, program, pool);
+  
+  // Log final pool state
+  console.log(`${logTag} 📊 Pool State AFTER:`);
+  console.log(`  └─ Base Reserve: ${poolState.baseReserve.toString()}`);
+  console.log(`  └─ Quote Reserve: ${poolState.quoteReserve.toString()}`);
+
+  // Calculate and log migration progress
+  const migrationProgress = poolState.quoteReserve
+    .mul(new BN(100))
+    .div(configState.migrationQuoteThreshold);
+  
+  const isCompleted = migrationProgress.gte(new BN(100));
+  
+  console.log(`${logTag} 🎯 Migration Progress: ${migrationProgress.toString()}%`);
+  console.log(`${logTag} ${isCompleted ? '✅ MIGRATION COMPLETE!' : '⏳ Migration pending...'}`);
+
   const configs = await getConfig(banksClient, program, config);
+  
   return {
     pool,
     computeUnitsConsumed: consumedCUSwap,
     message: simu.meta.logMessages,
     numInstructions: transaction.instructions.length,
-    completed:
-      Number(poolState.quoteReserve) >= Number(configs.migrationQuoteThreshold),
+    completed: isCompleted,
   };
 }
+ 
 
 export async function getSwapInstruction(
   banksClient: BanksClient,

@@ -7,6 +7,7 @@ import {
   claimTradingFee,
   ConfigParameters,
   createClaimFeeOperator,
+  closeClaimFeeOperator,
   createConfig,
   CreateConfigParams,
   createPoolWithSplToken,
@@ -15,6 +16,10 @@ import {
   swap,
   SwapParams,
 } from "./instructions";
+import {
+  deriveClaimFeeOperatorAddress,
+  deriveMigrationMetadataAddress
+} from "./utils/accounts";
 import { Pool, VirtualCurveProgram } from "./utils/types";
 import { Keypair, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { fundSol, getMint, startTest } from "./utils";
@@ -25,6 +30,7 @@ import {
   MAX_SQRT_PRICE,
   MIN_SQRT_PRICE,
   U64_MAX,
+
 } from "./utils";
 import { getVirtualPool, getConfig, getClaimFeeOperator } from "./utils/fetcher";
 import { NATIVE_MINT } from "@solana/spl-token";
@@ -50,6 +56,7 @@ describe("Full flow with spl-token", () => {
   let virtualPoolState: Pool;
   let dammConfig: PublicKey;
   let claimFeeOperator: PublicKey;
+  let unauthorizedUser: Keypair;
 
   before(async () => {
     context = await startTest();
@@ -58,6 +65,8 @@ describe("Full flow with spl-token", () => {
     partner = Keypair.generate();
     user = Keypair.generate();
     poolCreator = Keypair.generate();
+    unauthorizedUser = Keypair.generate();
+
     const receivers = [
       operator.publicKey,
       partner.publicKey,
@@ -68,44 +77,41 @@ describe("Full flow with spl-token", () => {
     program = createVirtualCurveProgram();
   });
 
-  it("Admin create claim fee operator", async () => {
-    console.log("🚀 Starting: Admin create claim fee operator");
- 
-    
-    try {
-      claimFeeOperator = await createClaimFeeOperator(
-        context.banksClient,
-        program,
-        {
-          admin,
-          operator: operator.publicKey,
-        }
-      );
+  it("Admin create claim fee operator - ENHANCED DEBUG", async () => {
+    console.log("🔧 Starting enhanced claim fee operator creation test...");
 
-    } catch (error) {
-      console.log("❌ Transaction failed:", error.message);
-      throw error;
-    }
+    // Pre-validation checks
+    console.log("🔍 Pre-validation checks...");
+    console.log("Admin balance:", await context.banksClient.getBalance(admin.publicKey));
+    console.log("Operator pubkey:", operator.publicKey.toString());
+    console.log("Program ID:", program.programId.toString());
 
 
-    // console.log("✅ Claim fee operator created successfully!");
-    // console.log("Claim Fee Operator Address:", claimFeeOperator.toString());
 
-    // // Verify the operator was created correctly
-    // const claimFeeOperatorState = await getClaimFeeOperator(
-    //   context.banksClient,
-    //   program,
-    //   claimFeeOperator
-    // );
+    claimFeeOperator = await createClaimFeeOperator(
+      context.banksClient,
+      program,
+      {
+        admin,
+        operator: operator.publicKey,
+      }
+    );
 
-    // console.log("📊 Claim Fee Operator State:");
-    // console.log("- Operator:", claimFeeOperatorState.operator.toString());
+    console.log("✅ Enhanced claim fee operator test completed successfully!");
 
-    // expect(claimFeeOperatorState.operator.toString()).eq(
-    //   operator.publicKey.toString()
-    // );
+  });
 
-   });
+
+
+
+  it("Admin close claim fee operator", async () => {
+    await closeClaimFeeOperator(
+      context.banksClient,
+      program,
+      admin,
+      claimFeeOperator
+    );
+  });
 
 
   it.only("Partner create config - Enhanced with Logs", async () => {
@@ -201,6 +207,7 @@ describe("Full flow with spl-token", () => {
       instructionParams,
     };
 
+
     console.log("\n🔑 Transaction Parameters:");
     console.log("  - Payer:", partner.publicKey.toBase58());
     console.log("  - Leftover Receiver:", partner.publicKey.toBase58());
@@ -210,7 +217,13 @@ describe("Full flow with spl-token", () => {
     console.log("\n📤 Calling createConfig...");
 
     // 4. Create Config Transaction
-    config = await createConfig(context.banksClient, program, params);
+    try {
+      config = await createConfig(context.banksClient, program, params);
+    } catch (error) {
+      console.error("❌ Error during createConfig:", error);
+    }
+
+
 
     console.log("✅ Config Created Successfully!");
     console.log("  - Config Address:", config.toBase58());
@@ -296,7 +309,9 @@ describe("Full flow with spl-token", () => {
   });
 
 
-  it("Swap", async () => {
+  it.only("Swap", async () => {
+    console.log('\n🧪 [TEST] Starting Swap Test');
+
     const params: SwapParams = {
       config,
       payer: user,
@@ -307,8 +322,23 @@ describe("Full flow with spl-token", () => {
       minimumAmountOut: new BN(0),
       referralTokenAccount: null,
     };
-    await swap(context.banksClient, program, params);
+
+    console.log(`[TEST] 📝 Swap Parameters:`);
+    console.log(`  └─ Input: ${LAMPORTS_PER_SOL * 5.5} lamports SOL`);
+    console.log(`  └─ Output: Base tokens (minimum: 0)`);
+    console.log(`  └─ Payer: ${user.publicKey.toString()}`);
+
+    const swapResult = await swap(context.banksClient, program, params);
+
+    console.log(`\n[TEST] 📋 Final Swap Results:`);
+    console.log(`  └─ Pool: ${swapResult.pool.toString()}`);
+    console.log(`  └─ Compute Units: ${swapResult.computeUnitsConsumed}`);
+    console.log(`  └─ Instructions: ${swapResult.numInstructions}`);
+    console.log(`  └─ Migration Complete: ${swapResult.completed ? '✅ YES' : '❌ NO'}`);
+
+    console.log('🏁 [TEST] Swap Test Complete\n');
   });
+
 
   it("Create meteora metadata", async () => {
     await createMeteoraMetadata(context.banksClient, program, {
@@ -406,9 +436,22 @@ describe("Full flow with spl-token", () => {
   });
 
   it("Operator claim protocol fee", async () => {
-    await claimProtocolFee(context.banksClient, program, {
+    console.log("\n🚀 Starting claim protocol fee test...");
+    console.log("📊 Test Context:", {
+      operator: operator.publicKey.toString(),
+      virtualPool: virtualPool.toString(),
+      claimFeeOperator: claimFeeOperator.toString()
+    });
+
+    const result = await claimProtocolFee(context.banksClient, program, {
       pool: virtualPool,
       operator: operator,
     });
+
+    console.log("✅ Claim protocol fee test completed successfully!");
+    console.log("📈 Final Results:", result);
   });
+
+
+
 });
