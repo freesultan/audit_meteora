@@ -318,9 +318,9 @@ describe("Full flow with spl-token", () => {
       pool: virtualPool,
       inputTokenMint: NATIVE_MINT,
       outputTokenMint: virtualPoolState.baseMint,
-      amountIn: new BN(LAMPORTS_PER_SOL * 5.5),
+      amountIn: new BN(LAMPORTS_PER_SOL * 1),
       minimumAmountOut: new BN(0),
-      referralTokenAccount: null,
+      referralTokenAccount: null,a
     };
 
     console.log(`[TEST] 📝 Swap Parameters:`);

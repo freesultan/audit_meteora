@@ -7,12 +7,14 @@
 - Cross-program invocation (CPI) vulnerabilities
 - input validation
 
+**math + precision + logic + input validation**
+
 sometime protocol works wrongly
 sometime you exploit a correct working protocol
 
 ## to do:
 - finish first iteration (done)
-- distinguish main flows and actors
+- distinguish main flows and actors (done)
 - run tests with boundry and edge cases for those flows
 - test order: Protocol Administration → Configuration Management → Access Controls → Pool Lifecycle → Fee Distribution → Trading Mechanics → Migration Processes
 
